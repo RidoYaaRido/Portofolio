@@ -7,8 +7,8 @@ import PortfolioSection from './portofolio/PortfolioSection';
 import BlogSection from './blog/BlogSection';
 import ContactSection from './contact/ContactSection';
 import SkillsSlider from './skill/SkillsSlider';
-import '@/assets/css/Portfolio.css';
-import avatar from "@/assets/avatar.png";
+import '@/assets/css/Portfolio.css'; 
+import avatar from '@/assets/avatar.png';
 
 const Page = () => {
   const [profile, setProfile] = useState(null);
@@ -16,10 +16,36 @@ const Page = () => {
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
   const [activeSection, setActiveSection] = useState('about');
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle scroll untuk hide/show nav di mobile
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Jika scroll ke bawah, sembunyikan nav
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsNavVisible(false);
+      } 
+      // Jika scroll ke atas, tampilkan nav
+      else if (currentScrollY < lastScrollY) {
+        setIsNavVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY]);
 
   const fetchData = async () => {
     try {
@@ -32,7 +58,7 @@ const Page = () => {
       // setProfile(profileRes.data);
       // setProjects(projectsRes.data);
       // setSkills(skillsRes.data);
-
+      
       // Dummy data for now
       setProfile({
         name: 'Rido Rifki Hakim',
@@ -49,7 +75,7 @@ const Page = () => {
           twitter: 'https://twitter.com/johndoe'
         }
       });
-
+      
       setSkills([
         { _id: 1, name: 'JavaScript', level: 95 },
         { _id: 2, name: 'React', level: 90 },
@@ -92,7 +118,7 @@ const Page = () => {
         return (
           <>
             <AboutSection profile={profile} services={services} />
-
+            
             {/* Skills Slider - Technologies & Tools */}
             <section className="content-section">
               <h2 className="section-title">Skills</h2>
@@ -140,15 +166,15 @@ const Page = () => {
       <aside className={`portfolio-sidebar ${isExpanded ? 'expanded' : ''}`}>
         <div className="profile-card">
           {/* Tombol Toggle Mobile - Muncul hanya di mobile */}
-          <button
-            className="info-toggle-btn"
+          <button 
+            className="info-toggle-btn" 
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <FiChevronDown className={isExpanded ? 'rotated' : ''} />
           </button>
 
           <div className="profile-header">
-            <div className="profile-avatar">
+             <div className="profile-avatar">
               {profile && (
                 <img src={avatar} alt={profile.name} />
               )}
@@ -228,34 +254,34 @@ const Page = () => {
                 {activeSection === 'blog' && 'Blog'}
                 {activeSection === 'contact' && 'Contact'}
               </h2>
-
-              <nav className="portfolio-nav">
-                <button
-                  className={activeSection === 'about' ? 'active' : ''}
+              
+              <nav className={`portfolio-nav ${!isNavVisible ? 'nav-hidden' : ''}`}>
+                <button 
+                  className={activeSection === 'about' ? 'active' : ''} 
                   onClick={() => setActiveSection('about')}
                 >
                   About
                 </button>
-                <button
-                  className={activeSection === 'resume' ? 'active' : ''}
+                <button 
+                  className={activeSection === 'resume' ? 'active' : ''} 
                   onClick={() => setActiveSection('resume')}
                 >
                   Resume
                 </button>
-                <button
-                  className={activeSection === 'portfolio' ? 'active' : ''}
+                <button 
+                  className={activeSection === 'portfolio' ? 'active' : ''} 
                   onClick={() => setActiveSection('portfolio')}
                 >
                   Portfolio
                 </button>
-                <button
-                  className={activeSection === 'blog' ? 'active' : ''}
+                <button 
+                  className={activeSection === 'blog' ? 'active' : ''} 
                   onClick={() => setActiveSection('blog')}
                 >
                   Blog
                 </button>
-                <button
-                  className={activeSection === 'contact' ? 'active' : ''}
+                <button 
+                  className={activeSection === 'contact' ? 'active' : ''} 
                   onClick={() => setActiveSection('contact')}
                 >
                   Contact

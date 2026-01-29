@@ -1098,6 +1098,7 @@ body {
   .portfolio-content {
     padding: 30px 20px;
     overflow-x: hidden;
+    padding-bottom: 100px; /* Tambahan space untuk nav bottom */
   }
 
   .portfolio-header {
@@ -1125,6 +1126,12 @@ body {
     margin: 0;
     border-radius: 20px 20px 0 0; /* Opsional: lengkungan di atas */
     box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    transform: translateY(0);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .portfolio-nav.nav-hidden {
+    transform: translateY(100%);
   }
 
   .portfolio-nav button {
