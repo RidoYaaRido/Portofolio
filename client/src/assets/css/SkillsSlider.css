@@ -1,0 +1,140 @@
+/* SkillsSlider.css */
+
+.skills-slider-container {
+  width: 100%;
+  padding: 20px 0;
+  overflow: hidden;
+  position: relative;
+  background: transparent;
+}
+
+/* Membuat efek fade di sisi kiri dan kanan slider */
+.skills-slider-container::before,
+.skills-slider-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.skills-slider-container::before {
+  left: 0;
+  background: linear-gradient(to right, #1a1a1a, transparent);
+}
+
+.skills-slider-container::after {
+  right: 0;
+  background: linear-gradient(to left, #1a1a1a, transparent);
+}
+
+.skills-slider {
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 10px 0;
+  cursor: default;
+  width: 100%;
+}
+
+.skills-slider-track {
+  display: flex;
+  gap: 20px;
+  padding: 0;
+  /* Tidak ada animation di CSS, karena kita handle di JavaScript */
+}
+
+.skill-logo-card {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #222;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: 1px solid #2a2a2a;
+  transition: all 0.3s ease;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+}
+
+.skill-logo-card:hover {
+  transform: translateY(-5px);
+  background: #252525;
+  border-color: var(--skill-color);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.skill-logo-icon {
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skill-logo-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #e4e4e4;
+  letter-spacing: 0.5px;
+}
+
+/* Memberikan sedikit cahaya warna pada bagian bawah card saat hover */
+.skill-logo-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: var(--skill-color);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.skill-logo-card:hover::after {
+  width: 70%;
+}
+
+/* Penyesuaian Responsif */
+@media (max-width: 768px) {
+  .skill-logo-card {
+    padding: 12px 20px;
+    gap: 10px;
+  }
+  
+  .skill-logo-name {
+    font-size: 13px;
+  }
+  
+  .skill-logo-icon {
+    font-size: 24px;
+  }
+
+  .skills-slider-track {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .skill-logo-card {
+    padding: 10px 16px;
+    gap: 8px;
+  }
+  
+  .skill-logo-name {
+    font-size: 12px;
+  }
+  
+  .skill-logo-icon {
+    font-size: 20px;
+  }
+
+  .skills-slider-track {
+    gap: 12px;
+  }
+}
