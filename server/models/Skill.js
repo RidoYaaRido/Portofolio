@@ -1,15 +1,9 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const skillSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    trim: true
-  },
-  category: {
-    type: String,
-    required: true,
-    enum: ['frontend', 'backend', 'database', 'tools', 'other']
+    required: true
   },
   level: {
     type: Number,
@@ -18,14 +12,30 @@ const skillSchema = new mongoose.Schema({
     max: 100
   },
   icon: {
-    type: String
+    type: String,
+    default: '⚡'
+  },
+  iconType: {
+    type: String,
+    enum: ['emoji', 'image'],
+    default: 'emoji'
+  },
+  iconUrl: {
+    type: String,
+    default: null
+  },
+  color: {
+    type: String,
+    default: '#ffa500'
+  },
+  category: {
+    type: String,
+    enum: ['frontend', 'backend', 'database', 'tools', 'devops', 'design', 'other'],
+    default: 'other'
   },
   description: {
-    type: String
-  },
-  order: {
-    type: Number,
-    default: 0
+    type: String,
+    default: ''
   },
   createdAt: {
     type: Date,
@@ -33,4 +43,4 @@ const skillSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model('Skill', skillSchema);
+module.exports = mongoose.model('Skill', skillSchema);

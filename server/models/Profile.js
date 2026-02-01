@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const profileSchema = new mongoose.Schema({
   name: {
@@ -9,44 +9,43 @@ const profileSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  avatar: {
-    type: String,
-    required: true
-  },
+
   email: {
     type: String,
     required: true
   },
   phone: {
-    type: String
+    type: String,
+    required: true
   },
   birthday: {
-    type: String
+    type: String,
+    required: true
   },
   location: {
-    type: String
+    type: String,
+    required: true
+  },
+  avatar: {
+    type: String,
+    default: ''
   },
   bio: {
-    type: String
+    type: String,
+    required: true
   },
   social: {
-    linkedin: String,
     github: String,
+    linkedin: String,
+
     twitter: String,
     instagram: String
   },
-  resumeUrl: {
-    type: String
-  },
+  
   updatedAt: {
     type: Date,
     default: Date.now
   }
 });
 
-profileSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
-export default mongoose.model('Profile', profileSchema);
+module.exports = mongoose.model('Profile', profileSchema);

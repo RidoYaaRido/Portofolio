@@ -6,11 +6,13 @@ import PrivateRoute from './components/PrivateRoute';
 
 // Pages
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import ProjectsManagement from './pages/ProjectsManagement';
-import SkillsManagement from './pages/SkillsManagement';
-import TestimonialsManagement from './pages/TestimonialsManagement';
-import ProfileManagement from './pages/ProfileManagement';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import ProjectManagement from './pages/Admin/ProjectManagement';
+import SkillsManagement from './pages/Admin/SkillManagement';
+import BlogManagement from './pages/Admin/BlogManagement';
+import ProfileManagement from './pages/Admin/ProfileManagement';
+import EducationManagement from './pages/Admin/EducationManagement';
+import ExperienceManagement from './pages/Admin/ExperienceManagement';
 import Page from './pages/Public/page';
 
 function App() {
@@ -24,12 +26,14 @@ function App() {
           <Route path="/login" element={<Login />} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<PrivateRoute><Dashboard /></PrivateRoute>}>
+          <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>}>
             <Route index element={<Navigate to="/admin/projects" replace />} />
-            <Route path="projects" element={<ProjectsManagement />} />
+            <Route path="projects" element={<ProjectManagement />} />
             <Route path="skills" element={<SkillsManagement />} />
-            <Route path="testimonials" element={<TestimonialsManagement />} />
+            <Route path="blog" element={<BlogManagement />} />
             <Route path="profile" element={<ProfileManagement />} />
+            <Route path="education" element={<EducationManagement />} />
+            <Route path="experience" element={<ExperienceManagement />} />
           </Route>
         </Routes>
       </Router>

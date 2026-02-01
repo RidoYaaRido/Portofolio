@@ -1,23 +1,28 @@
 import { useState, useEffect } from 'react';
-import { FiMail, FiPhone, FiCalendar, FiMapPin, FiGithub, FiLinkedin, FiGlobe, FiChevronDown } from 'react-icons/fi';
-// import api from './services/app';
+import { FiMail, FiPhone, FiCalendar, FiMapPin, FiGithub, FiLinkedin, FiTwitter, FiInstagram, FiChevronDown } from 'react-icons/fi';
+import api from '../../services/api';
 import AboutSection from './about/AboutSection';
 import ResumeSection from './resume/ResumeSection';
 import PortfolioSection from './portofolio/PortfolioSection';
 import BlogSection from './blog/BlogSection';
 import ContactSection from './contact/ContactSection';
 import SkillsSlider from './skill/SkillsSlider';
-import '@/assets/css/Portfolio.css'; 
-import avatar from '@/assets/avatar.png';
+import '../../assets/css/Portfolio.css'; 
+import '../../assets/css/LoadingStates.css';
+import avatar from '../../assets/avatar.png';
 
 const Page = () => {
   const [profile, setProfile] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
+  const [blogs, setBlogs] = useState([]);
+  const [education, setEducation] = useState([]);
+  const [experience, setExperience] = useState([]);
   const [activeSection, setActiveSection] = useState('about');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchData();
@@ -49,17 +54,29 @@ const Page = () => {
 
   const fetchData = async () => {
     try {
-      // Uncomment when API is ready
-      // const [profileRes, projectsRes, skillsRes] = await Promise.all([
-      //   api.get('/profile'),
-      //   api.get('/projects'),
-      //   api.get('/skills')
-      // ]);
-      // setProfile(profileRes.data);
-      // setProjects(projectsRes.data);
-      // setSkills(skillsRes.data);
+      setLoading(true);
       
-      // Dummy data for now
+      // Fetch semua data dari backend
+      const [profileRes, projectsRes, skillsRes, blogsRes, educationRes, experienceRes] = await Promise.all([
+        api.get('/profile'),
+        api.get('/projects'),
+        api.get('/skills'),
+        api.get('/blogs'),
+        api.get('/education'),
+        api.get('/experience')
+      ]);
+      
+      setProfile(profileRes.data);
+      setProjects(projectsRes.data);
+      setSkills(skillsRes.data);
+      setBlogs(blogsRes.data);
+      setEducation(educationRes.data);
+      setExperience(experienceRes.data);
+      
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      
+      // Fallback ke dummy data jika API gagal
       setProfile({
         name: 'Rido Rifki Hakim',
         title: 'Web Developer',
@@ -72,20 +89,18 @@ const Page = () => {
         social: {
           github: 'https://github.com/johndoe',
           linkedin: 'https://linkedin.com/in/johndoe',
-          twitter: 'https://twitter.com/johndoe'
+          twitter: 'https://twitter.com/johndoe',
+          instagram: 'https://instagram.com/johndoe'
         }
       });
       
       setSkills([
-        { _id: 1, name: 'JavaScript', level: 95 },
-        { _id: 2, name: 'React', level: 90 },
-        { _id: 3, name: 'Node.js', level: 85 },
-        { _id: 4, name: 'MongoDB', level: 80 },
-        { _id: 5, name: 'TypeScript', level: 85 },
-        { _id: 6, name: 'CSS/SCSS', level: 90 }
+        { _id: 1, name: 'JavaScript', level: 95, icon: '⚡', color: '#F7DF1E' },
+        { _id: 2, name: 'React', level: 90, icon: '⚛️', color: '#61DAFB' },
+        { _id: 3, name: 'Node.js', level: 85, icon: '🟢', color: '#339933' }
       ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,6 +128,15 @@ const Page = () => {
   ];
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading...</p>
+        </div>
+      );
+    }
+
     switch (activeSection) {
       case 'about':
         return (
@@ -122,42 +146,32 @@ const Page = () => {
             {/* Skills Slider - Technologies & Tools */}
             <section className="content-section">
               <h2 className="section-title">Skills</h2>
-              <SkillsSlider />
+              <SkillsSlider skills={skills} />
             </section>
-
-            {/* Skills with Progress Bars - Removed since it's already in slider
-            <section className="content-section">
-              <div className="skills-grid">
-                {skills.map(skill => (
-                  <div key={skill._id} className="skill-item-modern">
-                    <div className="skill-header">
-                      <span className="skill-name">{skill.name}</span>
-                      <span className="skill-percentage">{skill.level}%</span>
-                    </div>
-                    <div className="skill-bar">
-                      <div 
-                        className="skill-progress" 
-                        style={{ width: `${skill.level}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-            */}
           </>
         );
       case 'resume':
-        return <ResumeSection />;
+        return <ResumeSection education={education} experience={experience} />;
       case 'portfolio':
         return <PortfolioSection projects={projects} />;
       case 'blog':
-        return <BlogSection />;
+        return <BlogSection blogs={blogs} />;
       case 'contact':
         return <ContactSection profile={profile} />;
       default:
         return null;
     }
+  };
+
+  // Avatar URL helper - FIXED untuk Vite
+  const getAvatarUrl = () => {
+    if (!profile?.avatar) return avatar;
+    if (profile.avatar.startsWith('http')) return profile.avatar;
+    
+    // Gunakan import.meta.env untuk Vite, bukan process.env
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const baseUrl = apiUrl.replace('/api', '');
+    return `${baseUrl}${profile.avatar}`;
   };
 
   return (
@@ -176,7 +190,7 @@ const Page = () => {
           <div className="profile-header">
              <div className="profile-avatar">
               {profile && (
-                <img src={avatar} alt={profile.name} />
+                <img src={getAvatarUrl()} alt={profile.name} />
               )}
             </div>
             <div className="profile-text">
@@ -234,7 +248,12 @@ const Page = () => {
             )}
             {profile?.social?.twitter && (
               <a href={profile.social.twitter} target="_blank" rel="noopener noreferrer">
-                <FiGlobe />
+                <FiTwitter />
+              </a>
+            )}
+            {profile?.social?.instagram && (
+              <a href={profile.social.instagram} target="_blank" rel="noopener noreferrer">
+                <FiInstagram />
               </a>
             )}
           </div>

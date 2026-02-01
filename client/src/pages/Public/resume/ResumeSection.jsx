@@ -1,50 +1,30 @@
-const ResumeSection = () => {
-  const education = [
+const ResumeSection = ({ education = [], experience = [] }) => {
+  const certifications = [
+    'AWS Certified Developer Associate',
+    'MongoDB Certified Developer',
+    'React Professional Certification',
+    'Scrum Master Certified (SMC)'
+  ];
+
+  // Fallback data jika kosong
+  const educationData = education.length > 0 ? education : [
     {
       id: 1,
       degree: 'Bachelor of Computer Science',
       institution: 'University of Technology',
       period: '2016 - 2020',
       description: 'Focused on software engineering, data structures, and web development. Graduated with honors.'
-    },
-    {
-      id: 2,
-      degree: 'Full Stack Web Development Bootcamp',
-      institution: 'Tech Academy',
-      period: '2020',
-      description: 'Intensive program covering modern web technologies including React, Node.js, and MongoDB.'
     }
   ];
 
-  const experience = [
+  const experienceData = experience.length > 0 ? experience : [
     {
       id: 1,
       position: 'Senior Full Stack Developer',
       company: 'Tech Innovations Inc.',
       period: '2022 - Present',
       description: 'Leading development of enterprise web applications using React, Node.js, and AWS. Mentoring junior developers and implementing best practices.'
-    },
-    {
-      id: 2,
-      position: 'Full Stack Developer',
-      company: 'Digital Solutions Ltd.',
-      period: '2020 - 2022',
-      description: 'Developed and maintained multiple client projects using MERN stack. Collaborated with design team to create responsive and user-friendly interfaces.'
-    },
-    {
-      id: 3,
-      position: 'Junior Web Developer',
-      company: 'StartUp Hub',
-      period: '2019 - 2020',
-      description: 'Built responsive websites and landing pages. Gained experience in front-end technologies and version control systems.'
     }
-  ];
-
-  const certifications = [
-    'AWS Certified Developer Associate',
-    'MongoDB Certified Developer',
-    'React Professional Certification',
-    'Scrum Master Certified (SMC)'
   ];
 
   return (
@@ -53,8 +33,8 @@ const ResumeSection = () => {
       <section className="content-section">
         <h2 className="section-title">Education</h2>
         <div className="timeline">
-          {education.map(edu => (
-            <div key={edu.id} className="timeline-item">
+          {educationData.map((edu) => (
+            <div key={edu._id || edu.id} className="timeline-item">
               <div className="timeline-marker"></div>
               <div className="timeline-content">
                 <span className="timeline-period">{edu.period}</span>
@@ -71,8 +51,8 @@ const ResumeSection = () => {
       <section className="content-section">
         <h2 className="section-title">Experience</h2>
         <div className="timeline">
-          {experience.map(exp => (
-            <div key={exp.id} className="timeline-item">
+          {experienceData.map((exp) => (
+            <div key={exp._id || exp.id} className="timeline-item">
               <div className="timeline-marker"></div>
               <div className="timeline-content">
                 <span className="timeline-period">{exp.period}</span>

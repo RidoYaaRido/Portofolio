@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FiMail, FiPhone, FiMapPin, FiSend } from 'react-icons/fi';
+import api from '@/services/api';
 
 const ContactSection = ({ profile }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +10,7 @@ const ContactSection = ({ profile }) => {
     message: ''
   });
 
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(''); // '' | 'sending' | 'success' | 'error'
 
   const handleChange = (e) => {
     setFormData({
@@ -18,25 +19,29 @@ const ContactSection = ({ profile }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('sending');
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      await api.post('/contact', formData);
+
       setStatus('success');
       setFormData({ name: '', email: '', subject: '', message: '' });
-      
-      setTimeout(() => {
-        setStatus('');
-      }, 3000);
-    }, 1500);
+
+      // Reset status back ke kosong setelah 4 detik
+      setTimeout(() => setStatus(''), 4000);
+    } catch (error) {
+      console.error('Contact form error:', error);
+      setStatus('error');
+
+      // Reset status error setelah 5 detik supaya user bisa coba lagi
+      setTimeout(() => setStatus(''), 5000);
+    }
   };
 
   return (
     <section className="content-section">
-      {/* <h2 className="section-title">Contact Me</h2> */}
-      
       <div className="contact-container">
         {/* Contact Info Cards */}
         <div className="contact-info-grid">
@@ -46,8 +51,8 @@ const ContactSection = ({ profile }) => {
             </div>
             <div>
               <h4 className="contact-label">Email</h4>
-              <a href={`mailto:${profile?.email || 'contact@example.com'}`} className="contact-value">
-                {profile?.email || 'contact@example.com'}
+              <a href={`mailto:${profile?.email || 'ridorifkihakim@gmail.com'}`} className="contact-value">
+                {profile?.email || 'ridorifkihakim@gmail.com'}
               </a>
             </div>
           </div>
@@ -87,6 +92,7 @@ const ContactSection = ({ profile }) => {
                 value={formData.name}
                 onChange={handleChange}
                 required
+                disabled={status === 'sending'}
                 placeholder="Enter your name"
               />
             </div>
@@ -100,6 +106,7 @@ const ContactSection = ({ profile }) => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                disabled={status === 'sending'}
                 placeholder="Enter your email"
               />
             </div>
@@ -114,6 +121,7 @@ const ContactSection = ({ profile }) => {
               value={formData.subject}
               onChange={handleChange}
               required
+              disabled={status === 'sending'}
               placeholder="Enter subject"
             />
           </div>
@@ -126,13 +134,14 @@ const ContactSection = ({ profile }) => {
               value={formData.message}
               onChange={handleChange}
               required
+              disabled={status === 'sending'}
               rows="6"
               placeholder="Write your message here..."
             ></textarea>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-btn"
             disabled={status === 'sending'}
           >
@@ -150,6 +159,16 @@ const ContactSection = ({ profile }) => {
           {status === 'success' && (
             <div className="success-message">
               ✓ Your message has been sent successfully!
+            </div>
+          )}
+
+          {status === 'error' && (
+            <div className="success-message" style={{ 
+              borderColor: '#ff4444', 
+              backgroundColor: 'rgba(255, 68, 68, 0.1)', 
+              color: '#ff6666' 
+            }}>
+              ✕ Failed to send message. Please try again later.
             </div>
           )}
         </form>

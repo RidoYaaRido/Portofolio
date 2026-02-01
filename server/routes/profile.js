@@ -1,83 +1,81 @@
-import express from 'express';
-import Profile from '../models/Profile.js';
-import { authenticate, isAdmin } from '../middleware/auth.js';
-import { upload } from '../middleware/upload.js';
-
+const express = require('express');
 const router = express.Router();
+const Profile = require('../models/Profile');
+const auth = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 
-// Get profile (public)
+// Multer configuration for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage });
+
+// Get Profile
 router.get('/', async (req, res) => {
   try {
-    const profile = await Profile.findOne();
+    let profile = await Profile.findOne();
     
     if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
+      // Create default profile if none exists
+      profile = new Profile({
+        name: 'Your Name',
+        title: 'Web Developer',
+        email: 'your.email@example.com',
+        phone: '+62 XXX-XXXX-XXXX',
+        birthday: 'January 1',
+        location: 'Jakarta, Indonesia',
+        bio: 'Add your bio here',
+        social: {
+          github: '',
+          linkedin: '',
+          twitter: ''
+        }
+      });
+      await profile.save();
     }
     
     res.json(profile);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching profile', error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Create or update profile (admin only)
-router.post('/', authenticate, isAdmin, upload.single('avatar'), async (req, res) => {
+// Update Profile
+router.put('/', auth, upload.single('avatar'), async (req, res) => {
   try {
-    const {
-      name,
-      title,
-      email,
-      phone,
-      birthday,
-      location,
-      bio,
-      linkedin,
-      github,
-      twitter,
-      instagram,
-      resumeUrl
-    } = req.body;
-
-    const profileData = {
-      name,
-      title,
-      email,
-      phone,
-      birthday,
-      location,
-      bio,
-      social: {
-        linkedin,
-        github,
-        twitter,
-        instagram
-      },
-      resumeUrl
-    };
-
+    const updateData = { ...req.body };
+    
     if (req.file) {
-      profileData.avatar = `/uploads/${req.file.filename}`;
+      updateData.avatar = `/uploads/${req.file.filename}`;
     }
-
-    // Check if profile exists
+    
+    if (req.body.social) {
+      updateData.social = JSON.parse(req.body.social);
+    }
+    
+    updateData.updatedAt = Date.now();
+    
     let profile = await Profile.findOne();
-
-    if (profile) {
-      // Update existing profile
-      if (!req.file) {
-        profileData.avatar = profile.avatar;
-      }
-      profile = await Profile.findByIdAndUpdate(profile._id, profileData, { new: true });
-      res.json({ message: 'Profile updated successfully', profile });
+    
+    if (!profile) {
+      profile = new Profile(updateData);
     } else {
-      // Create new profile
-      profile = new Profile(profileData);
-      await profile.save();
-      res.status(201).json({ message: 'Profile created successfully', profile });
+      Object.assign(profile, updateData);
     }
+    
+    await profile.save();
+    
+    res.json({ message: 'Profile updated successfully', profile });
   } catch (error) {
-    res.status(500).json({ message: 'Error saving profile', error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-export default router;
+module.exports = router;

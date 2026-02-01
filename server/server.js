@@ -1,21 +1,11 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Import routes
-import authRoutes from './routes/auth.js';
-import projectRoutes from './routes/projects.js';
-import skillRoutes from './routes/skills.js';
-import testimonialRoutes from './routes/testimonials.js';
-import profileRoutes from './routes/profile.js';
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const multer = require('multer');
+const path = require('path');
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -23,19 +13,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/skills', skillRoutes);
-app.use('/api/testimonials', testimonialRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/uploads', express.static('uploads'));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ MongoDB Connected'))
+.catch(err => console.error('❌ MongoDB connection error:', err));
+
+// Import Routes
+const authRoutes = require('./routes/auth');
+const profileRoutes = require('./routes/profile');
+const projectRoutes = require('./routes/projects');
+const skillRoutes = require('./routes/skills');
+const blogRoutes = require('./routes/blogs');
+const educationRoutes = require('./routes/education');
+const experienceRoutes = require('./routes/experience');
+const contactRouter = require('./routes/contact');
+
+// Use Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/education', educationRoutes);
+app.use('/api/experience', experienceRoutes);
+app.use('/api/contact', contactRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

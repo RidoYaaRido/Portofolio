@@ -1,13 +1,15 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-export const authenticate = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
     // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      return res.status(401).json({ message: 'No authentication token, access denied' });
+      return res.status(401).json({ 
+        message: 'No authentication token, access denied' 
+      });
     }
 
     // Verify token
@@ -15,23 +17,37 @@ export const authenticate = async (req, res, next) => {
     
     // Find user
     const user = await User.findById(decoded.userId).select('-password');
-    
+
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json({ 
+        message: 'User not found, token invalid' 
+      });
     }
 
     // Attach user to request
     req.user = user;
+    req.userId = decoded.userId;
+    
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Token is not valid', error: error.message });
+    console.error('Auth middleware error:', error);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        message: 'Token is not valid' 
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        message: 'Token has expired' 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error in authentication' 
+    });
   }
 };
 
-export const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.status(403).json({ message: 'Access denied. Admin only.' });
-  }
-};
+module.exports = auth;

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const projectSchema = new mongoose.Schema({
+const blogSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true
@@ -9,7 +9,11 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  description: {
+  excerpt: {
+    type: String,
+    required: true
+  },
+  content: {
     type: String,
     required: true
   },
@@ -17,24 +21,18 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  technologies: [{
-    type: String
-  }],
-  demoUrl: {
-    type: String
+  readTime: {
+    type: String,
+    default: '5 min read'
   },
-  githubUrl: {
-    type: String
-  },
-  featured: {
+  published: {
     type: Boolean,
     default: false
   },
   createdAt: {
-    
     type: Date,
     default: Date.now
   }
 });
 
-module.exports = mongoose.model('Project', projectSchema);
+module.exports = mongoose.model('Blog', blogSchema);
