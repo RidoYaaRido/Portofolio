@@ -2,30 +2,27 @@
   "version": 2,
   "builds": [
     {
-      "src": "client/package.json",
-      "use": "@vercel/next"
+      "src": "server.js",
+      "use": "@vercel/node"
     },
     {
-      "src": "server/server.js",
-      "use": "@vercel/node"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
     }
   ],
   "rewrites": [
     {
-      "source": "/api/v1/(.*)",
-      "destination": "/server/server.js"
-    },
-    {
-      "source": "/health",
-      "destination": "/server/server.js"
+      "source": "/api/(.*)",
+      "destination": "server.js"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "/server/server.js"
+      "destination": "/uploads/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/client/$1" 
+      "destination": "/index.html"
     }
   ]
 }
