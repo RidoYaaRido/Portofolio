@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { FiMail, FiPhone, FiCalendar, FiMapPin, FiGithub, FiLinkedin, FiTwitter, FiInstagram, FiChevronDown } from 'react-icons/fi';
-import api from '../../services/api';
+import api from '@/services/api';
 import AboutSection from './about/AboutSection';
 import ResumeSection from './resume/ResumeSection';
 import PortfolioSection from './portofolio/PortfolioSection';
 import BlogSection from './blog/BlogSection';
 import ContactSection from './contact/ContactSection';
 import SkillsSlider from './skill/SkillsSlider';
-import '../../assets/css/Portfolio.css'; 
-import '../../assets/css/LoadingStates.css';
-import avatar from '../../assets/avatar.png';
+import '@/assets/css/Portfolio.css'; 
+import '@/assets/css/LoadingStates.css';
+import avatar from '@/assets/avatar.png';
 
 const Page = () => {
   const [profile, setProfile] = useState(null);
