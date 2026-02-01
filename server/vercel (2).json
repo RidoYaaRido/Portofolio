@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "FE/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "BE/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/v1/(.*)",
+      "destination": "/BE/server.js"
+    },
+    {
+      "source": "/health",
+      "destination": "/BE/server.js"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "/BE/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/FE/$1" 
+    }
+  ]
+}
