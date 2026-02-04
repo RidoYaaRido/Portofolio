@@ -8,7 +8,7 @@ import BlogSection from './blog/BlogSection';
 import ContactSection from './contact/ContactSection';
 import SkillsSlider from './skill/SkillsSlider';
 import '@/assets/css/Portfolio.css'; 
-import '@/assets/css/LoadingStates.css';
+import '@/assets/css/Loadingstates.css';
 import avatar from '@/assets/avatar.png';
 
 const Page = () => {
