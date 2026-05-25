@@ -1,0 +1,91 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+}
+
+model Profile {
+  id        String   @id @default(uuid())
+  name      String
+  title     String
+  email     String
+  phone     String
+  birthday  String
+  location  String
+  avatar    String   @default("")
+  bio       String
+  social    Json?    // Stores github, linkedin, twitter, instagram
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id           String   @id @default(uuid())
+  title        String
+  category     String
+  description  String
+  image        String
+  technologies String[]
+  demoUrl      String?
+  githubUrl    String?
+  featured     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+model Skill {
+  id          String   @id @default(uuid())
+  name        String
+  level       Int
+  icon        String   @default("⚡")
+  iconType    String   @default("emoji")
+  iconUrl     String?
+  color       String   @default("#ffa500")
+  category    String   @default("other")
+  description String   @default("")
+  createdAt   DateTime @default(now())
+}
+
+model Blog {
+  id        String   @id @default(uuid())
+  title     String
+  category  String
+  excerpt   String
+  content   String   @db.Text
+  image     String
+  readTime  String   @default("5 min read")
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Education {
+  id          String   @id @default(uuid())
+  degree      String
+  institution String
+  period      String
+  description String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Experience {
+  id          String   @id @default(uuid())
+  position    String
+  company     String
+  period      String
+  description String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

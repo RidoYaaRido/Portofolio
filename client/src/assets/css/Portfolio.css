@@ -28,7 +28,7 @@ body {
   padding: 30px 25px;
   position: fixed;
   height: 100vh;
-  overflow-y: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -39,6 +39,7 @@ body {
   align-items: center;
   height: 100%;
   justify-content: space-between;
+  min-height: max-content;
 }
 
 .profile-header {
@@ -46,6 +47,7 @@ body {
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
+  position: relative;
 }
 
 .profile-avatar {
@@ -88,11 +90,10 @@ body {
   border-radius: 16px;
   padding: 18px;
   margin-bottom: 20px;
-  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .profile-info-wrapper {
@@ -127,7 +128,7 @@ body {
 }
 
 .info-icon {
-  color: #ffa500;
+  color: #B0E4CC;
   font-size: 16px;
   margin-top: 2px;
   flex-shrink: 0;
@@ -157,7 +158,7 @@ body {
 }
 
 .info-value:hover {
-  color: #ffa500;
+  color: #B0E4CC;
 }
 
 .profile-social {
@@ -181,8 +182,8 @@ body {
 }
 
 .profile-social a:hover {
-  background: #ffa500;
-  color: #fff;
+  background: #B0E4CC;
+  color: #1a1a1a;
   transform: translateY(-3px);
 }
 
@@ -208,11 +209,11 @@ body {
   padding: 3px; /* Ini adalah KETEBALAN BORDER kamu */
   background: linear-gradient(
     45deg,
-    #ff9f43, /* Orange */
-    #ff3f34, /* Red */
-    #0fb9b1, /* Cyan */
-    #a55eea, /* Purple */
-    #ff9f43  /* Loop back to Orange */
+    #408A71, /* Orange */
+    #408A71, /* Red */
+    #B0E4CC, /* Cyan */
+    #408A71, /* Purple */
+    #408A71  /* Loop back to Orange */
   ) !important;
   background-size: 400% 400% !important;
   animation: gradientMove 6s ease infinite !important;
@@ -280,8 +281,104 @@ body {
   bottom: 0;
   width: 50px;
   height: 3px;
-  background: #ffa500;
+  background: #B0E4CC;
   border-radius: 3px;
+}
+
+/* Interactive Dock Styles */
+.portfolio-dock {
+  display: flex;
+  position: relative;
+  background: rgba(26, 26, 26, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: var(--gap, 6px);
+  gap: var(--gap, 6px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dock-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--item-width, 70px);
+  height: var(--item-height, 50px);
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: color 0.3s ease;
+  z-index: 1;
+  padding: 0;
+  gap: 2px;
+}
+
+.dock-item:hover {
+  color: #e4e4e4;
+}
+
+.dock-item.active {
+  color: #1a1a1a;
+}
+
+.dock-icon {
+  font-size: 18px;
+  margin-bottom: 1px;
+  pointer-events: none;
+}
+
+.dock-label {
+  font-size: 10px;
+  font-weight: 500;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.dock-indicator {
+  position: absolute;
+  top: var(--gap, 6px);
+  left: var(--gap, 6px);
+  width: var(--item-width, 70px);
+  height: var(--item-height, 50px);
+  background: #B0E4CC;
+  border-radius: 12px;
+  z-index: 0;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translateX(calc(var(--active-index, 0) * (var(--item-width, 70px) + var(--gap, 6px))));
+  pointer-events: none;
+}
+
+/* Ghost icon animation */
+.ghost-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: #B0E4CC;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ghost-icon.floating {
+  animation: ghostFloat 0.8s ease-out forwards;
+}
+
+@keyframes ghostFloat {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -180%) scale(1.5);
+  }
 }
 
 .portfolio-nav {
@@ -312,8 +409,8 @@ body {
 }
 
 .portfolio-nav button.active {
-  background: #ffa500;
-  color: #fff;
+  background: #B0E4CC;
+  color: #1a1a1a;
 }
 
 .portfolio-content {
@@ -350,7 +447,7 @@ body {
   bottom: 0;
   width: 50px;
   height: 3px;
-  background: linear-gradient(90deg, #ffa500, transparent);
+  background: linear-gradient(90deg, #B0E4CC, transparent);
 }
 
 .about-text {
@@ -393,7 +490,7 @@ body {
 
 .service-card:hover {
   transform: translateY(-5px);
-  border-color: #ffa500;
+  border-color: #B0E4CC;
   background: #252525;
 }
 
@@ -482,7 +579,7 @@ body {
 
 .skill-progress {
   height: 100%;
-  background: linear-gradient(90deg, #ffa500, #ff6b35);
+  background: linear-gradient(90deg, #B0E4CC, #408A71);
   border-radius: 10px;
   transition: width 1s ease;
 }
@@ -523,7 +620,7 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ffa500;
+  background: #B0E4CC;
   border: 3px solid #1a1a1a;
   z-index: 1;
 }
@@ -532,14 +629,14 @@ body {
   background: #222;
   padding: 25px;
   border-radius: 12px;
-  border-left: 3px solid #ffa500;
+  border-left: 3px solid #B0E4CC;
 }
 
 .timeline-period {
   display: inline-block;
   font-size: 12px;
-  color: #ffa500;
-  background: rgba(255, 165, 0, 0.1);
+  color: #B0E4CC;
+  background: rgba(176, 228, 204, 0.1);
   padding: 4px 12px;
   border-radius: 6px;
   margin-bottom: 12px;
@@ -585,7 +682,7 @@ body {
 }
 
 .certification-badge:hover {
-  border-color: #ffa500;
+  border-color: #B0E4CC;
   background: #252525;
   transform: translateX(5px);
 }
@@ -622,13 +719,14 @@ body {
 
 .filter-btn:hover {
   color: #e4e4e4;
-  border-color: #ffa500;
+  border-color: #B0E4CC;
 }
 
 .filter-btn.active {
-  background: #ffa500;
-  color: #fff;
-  border-color: #ffa500;
+  background: #B0E4CC;
+  color: #1a1a1a;
+  border-color: #B0E4CC;
+  font-weight: 600;
 }
 
 /* Projects Grid */
@@ -693,7 +791,7 @@ body {
 
 .project-overlay p {
   font-size: 13px;
-  color: #ffa500;
+  color: #B0E4CC;
   margin: 0 0 10px 0;
   text-transform: capitalize;
 }
@@ -706,11 +804,11 @@ body {
 
 .tech-tag {
   font-size: 11px;
-  background: rgba(255, 165, 0, 0.2);
-  color: #ffa500;
+  background: rgba(176, 228, 204, 0.2);
+  color: #B0E4CC;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 165, 0, 0.3);
+  border: 1px solid rgba(176, 228, 204, 0.3);
 }
 
 /* Blog Grid */
@@ -755,8 +853,8 @@ body {
   position: absolute;
   top: 15px;
   left: 15px;
-  background: #ffa500;
-  color: #fff;
+  background: #B0E4CC;
+  color: #1a1a1a;
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 12px;
@@ -793,7 +891,7 @@ body {
 .blog-read-more {
   background: transparent;
   border: 1px solid #2a2a2a;
-  color: #ffa500;
+  color: #B0E4CC;
   padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
@@ -803,9 +901,9 @@ body {
 }
 
 .blog-read-more:hover {
-  background: #ffa500;
-  color: #fff;
-  border-color: #ffa500;
+  background: #B0E4CC;
+  color: #1a1a1a;
+  border-color: #B0E4CC;
 }
 
 /* Contact Styles */
@@ -832,19 +930,19 @@ body {
 }
 
 .contact-info-card:hover {
-  border-color: #ffa500;
+  border-color: #B0E4CC;
   background: #252525;
 }
 
 .contact-icon {
   width: 45px;
   height: 45px;
-  background: rgba(255, 165, 0, 0.1);
+  background: rgba(176, 228, 204, 0.1);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffa500;
+  color: #B0E4CC;
   font-size: 20px;
   flex-shrink: 0;
 }
@@ -865,7 +963,7 @@ body {
 }
 
 .contact-value:hover {
-  color: #ffa500;
+  color: #B0E4CC;
 }
 
 /* Contact Form */
@@ -910,7 +1008,7 @@ body {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #ffa500;
+  border-color: #B0E4CC;
   background: #222;
 }
 
@@ -921,8 +1019,8 @@ body {
 
 .submit-btn {
   width: 100%;
-  background: #ffa500;
-  color: #fff;
+  background: #B0E4CC;
+  color: #1a1a1a;
   border: none;
   padding: 16px 32px;
   border-radius: 10px;
@@ -937,9 +1035,9 @@ body {
 }
 
 .submit-btn:hover {
-  background: #ff8c00;
+  background: #90d3b6;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 165, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(176, 228, 204, 0.3);
 }
 
 .submit-btn:disabled {
@@ -996,7 +1094,11 @@ body {
     width: 100%;
     position: relative;
     height: auto;
-    padding: 30px 20px;
+    padding: 25px 20px 0 20px;
+  }
+
+  .portfolio-sidebar.expanded {
+    padding-bottom: 25px;
   }
 
   .info-toggle-btn {
@@ -1009,7 +1111,7 @@ body {
     background: #2a2a2a;
     border: none;
     border-radius: 8px;
-    color: #ffa500;
+    color: #B0E4CC;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1031,7 +1133,12 @@ body {
     align-items: flex-start;
     gap: 15px;
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
+    padding-bottom: 35px;
+  }
+
+  .portfolio-sidebar.expanded .profile-header {
+    margin-bottom: 20px;
   }
 
   .profile-avatar {
@@ -1067,12 +1174,14 @@ body {
     overflow: hidden;
     transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
     padding: 0 18px;
+    margin-bottom: 0;
   }
 
   .profile-info.show {
     max-height: 500px;
     opacity: 1;
     padding: 18px;
+    margin-bottom: 20px;
   }
 
   .profile-social {
@@ -1080,16 +1189,18 @@ body {
     opacity: 0;
     overflow: hidden;
     transition: max-height 0.4s ease, opacity 0.3s ease;
+    margin-top: 0;
   }
 
   .portfolio-sidebar.expanded .profile-social {
     max-height: 100px;
     opacity: 1;
+    margin-top: 15px;
   }
   
   .portfolio-main {
     margin-left: 0;
-    padding: 30px 20px 80px 20px;
+    padding: 15px 20px 80px 20px;
     max-width: 100vw;
     width: 100%;
     overflow-x: hidden;
@@ -1112,38 +1223,45 @@ body {
     font-size: 26px;
   }
 
- .portfolio-nav {
-    position: fixed; /* Membuatnya menempel di layar */
-    bottom: 0;       /* Di posisi paling bawah */
-    left: 0;
-    width: 100%;
-    background: #1a1a1a; /* Warna background solid */
-    display: flex;
-    justify-content: space-around; /* Jarak antar tombol rata */
-    padding: 12px 10px;
-    border-top: 1px solid #2a2a2a; /* Garis di atas nav */
-    z-index: 9999; /* Pastikan di atas elemen lain */
-    margin: 0;
-    border-radius: 20px 20px 0 0; /* Opsional: lengkungan di atas */
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-    transform: translateY(0);
+  :root {
+    --item-width: 50px;
+    --item-height: 44px;
+    --gap: 4px;
+  }
+
+  .portfolio-dock {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    width: max-content;
+    max-width: 95vw;
+    box-shadow: 0 10px 30px rgba(9, 20, 19, 0.5);
+    border-radius: 20px;
+    z-index: 9999;
     transition: transform 0.3s ease-in-out;
   }
 
-  .portfolio-nav.nav-hidden {
-    transform: translateY(100%);
+  .portfolio-dock.dock-hidden {
+    transform: translateX(-50%) translateY(120%);
   }
 
-  .portfolio-nav button {
-    padding: 10px;
-    font-size: 12px;
-    flex: 1; /* Biar tombol bagi rata lebarnya */
-    background: transparent;
+  .dock-label {
+    display: none;
+  }
+
+  .dock-icon {
+    font-size: 20px;
+    margin-bottom: 0;
+  }
+
+  .dock-indicator {
+    border-radius: 10px;
   }
 
   .portfolio-nav button.active {
-    background: #ffa500;
-    color: #fff;
+    background: #B0E4CC;
+    color: #1a1a1a;
     border-radius: 10px;
   }
   
@@ -1242,4 +1360,54 @@ body {
 
 .portfolio-sidebar::-webkit-scrollbar-thumb:hover {
   background: #3a3a3a;
+}
+
+/* Language switcher styles */
+.lang-switcher-sidebar {
+  position: absolute;
+  top: 0;
+  left: calc(50% + 70px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 4px 6px;
+  border-radius: 10px;
+  z-index: 5;
+}
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 8px;
+  transition: all 0.2s ease;
+}
+
+.lang-btn:hover {
+  color: #fff;
+}
+
+.lang-btn.active {
+  color: #B0E4CC;
+  text-shadow: 0 0 8px rgba(176, 228, 204, 0.3);
+}
+
+.lang-divider {
+  color: #2a2a2a;
+  font-size: 12px;
+}
+
+@media (max-width: 992px) {
+  .lang-switcher-sidebar {
+    top: 90px;
+    left: 40px;
+    right: auto;
+    transform: translateX(-50%);
+  }
 }

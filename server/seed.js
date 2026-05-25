@@ -1,70 +1,51 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
-
-// Import models
-const User = require('./models/User');
-const Profile = require('./models/Profile');
-const Project = require('./models/Project');
-const Skill = require('./models/Skill');
-const Blog = require('./models/Blog');
-const Education = require('./models/Education');
-const Experience = require('./models/Experience');
-
-// Connect to MongoDB
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('✅ MongoDB Connected');
-  } catch (err) {
-    console.error('❌ MongoDB Error:', err);
-    process.exit(1);
-  }
-};
+const prisma = require('./config/prisma');
 
 const seedDatabase = async () => {
   try {
-    console.log('🌱 Seeding database...');
+    console.log('🌱 Seeding database with Prisma...');
     console.log('');
 
     // Clear existing data
-    await User.deleteMany({});
-    await Profile.deleteMany({});
-    await Project.deleteMany({});
-    await Skill.deleteMany({});
-    await Blog.deleteMany({});
-    await Education.deleteMany({});
-    await Experience.deleteMany({});
+    await prisma.user.deleteMany({});
+    await prisma.profile.deleteMany({});
+    await prisma.project.deleteMany({});
+    await prisma.skill.deleteMany({});
+    await prisma.blog.deleteMany({});
+    await prisma.education.deleteMany({});
+    await prisma.experience.deleteMany({});
     console.log('✅ Cleared existing data');
 
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
-    const admin = await User.create({
-      email: 'admin@portfolio.com',
-      password: hashedPassword,
-      name: 'Admin User',
-      role: 'admin'
+    const admin = await prisma.user.create({
+      data: {
+        email: 'admin@portfolio.com',
+        password: hashedPassword,
+        name: 'Admin User',
+        role: 'admin'
+      }
     });
     console.log('✅ Admin user created');
 
     // Create profile
-    await Profile.create({
-      name: 'Rido Rifki Hakim',
-      title: 'Full Stack Web Developer',
-      email: 'ridorifkihakim@gmail.com',
-      phone: '+62 858-8867-3602',
-      birthday: 'April 18',
-      location: 'Bekasi, Jawa Barat, Indonesia',
-      avatar: '',
-      bio: 'I am a Web Developer who also has deep expertise in Web Design, Mobile App Development, and Software QA Testing. With a strong technical background and a keen attention to detail, I am committed to creating digital solutions that are not only aesthetically pleasing and user-friendly but also robust in terms of performance and functionality.',
-      social: {
-        github: 'https://github.com/ridorifki',
-        linkedin: 'https://linkedin.com/in/ridorifki',
-        twitter: 'https://twitter.com/ridorifki',
-        instagram: 'https://instagram.com/ridorifki'
+    await prisma.profile.create({
+      data: {
+        name: 'Rido Rifki Hakim',
+        title: 'Full Stack Web Developer',
+        email: 'ridorifkihakim@gmail.com',
+        phone: '+62 858-8867-3602',
+        birthday: 'April 18',
+        location: 'Bekasi, Jawa Barat, Indonesia',
+        avatar: '',
+        bio: 'I am a Web Developer who also has deep expertise in Web Design, Mobile App Development, and Software QA Testing. With a strong technical background and a keen attention to detail, I am committed to creating digital solutions that are not only aesthetically pleasing and user-friendly but also robust in terms of performance and functionality.',
+        social: {
+          github: 'https://github.com/ridorifki',
+          linkedin: 'https://linkedin.com/in/ridorifki',
+          twitter: 'https://twitter.com/ridorifki',
+          instagram: 'https://instagram.com/ridorifki'
+        }
       }
     });
     console.log('✅ Profile created');
@@ -82,7 +63,10 @@ const seedDatabase = async () => {
       { name: 'Docker', level: 75, icon: '🐳', color: '#2496ED', category: 'tools' },
       { name: 'PostgreSQL', level: 75, icon: '🐘', color: '#4169E1', category: 'database' }
     ];
-    await Skill.insertMany(skills);
+    
+    for (const skill of skills) {
+      await prisma.skill.create({ data: skill });
+    }
     console.log('✅ Skills created');
 
     // Create education
@@ -102,7 +86,10 @@ const seedDatabase = async () => {
         order: 2
       }
     ];
-    await Education.insertMany(education);
+    
+    for (const edu of education) {
+      await prisma.education.create({ data: edu });
+    }
     console.log('✅ Education created');
 
     // Create experience
@@ -129,7 +116,10 @@ const seedDatabase = async () => {
         order: 3
       }
     ];
-    await Experience.insertMany(experience);
+
+    for (const exp of experience) {
+      await prisma.experience.create({ data: exp });
+    }
     console.log('✅ Experience created');
 
     console.log('');
@@ -152,7 +142,4 @@ const seedDatabase = async () => {
   }
 };
 
-// Run seeding
-connectDB().then(() => {
-  seedDatabase();
-});
+seedDatabase();

@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import api from '../../services/api';
+import api, { getBaseUrl } from '../../services/api';
 import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
+import { translateTextApi, parseTranslated, translateText } from '../../utils/translationHelper';
 
 const ProjectManagement = () => {
   const [projects, setProjects] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    category: '',
-    description: '',
+    title_id: '',
+    title_en: '',
+    category_id: '',
+    category_en: '',
+    description_id: '',
+    description_en: '',
     technologies: '',
     demoUrl: '',
     githubUrl: '',
@@ -32,18 +36,54 @@ const ProjectManagement = () => {
     }
   };
 
+  const handleTranslate = async (field, sourceLang) => {
+    let sourceText = '';
+    let targetLang = sourceLang === 'id' ? 'en' : 'id';
+
+    if (field === 'title') {
+      sourceText = sourceLang === 'id' ? formData.title_id : formData.title_en;
+    } else if (field === 'category') {
+      sourceText = sourceLang === 'id' ? formData.category_id : formData.category_en;
+    } else if (field === 'description') {
+      sourceText = sourceLang === 'id' ? formData.description_id : formData.description_en;
+    }
+
+    if (!sourceText || sourceText.trim() === '') {
+      toast.warning('Please enter source text first');
+      return;
+    }
+
+    try {
+      const toastId = toast.loading('Translating...');
+      const translated = await translateTextApi(sourceText, targetLang);
+      toast.dismiss(toastId);
+
+      const targetField = `${field}_${targetLang}`;
+      setFormData(prev => ({
+        ...prev,
+        [targetField]: translated
+      }));
+      toast.success('Translated successfully!');
+    } catch (error) {
+      toast.error('Translation failed');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (key === 'technologies') {
-        // Convert comma-separated string to array
-        data.append(key, JSON.stringify(formData[key].split(',').map(t => t.trim())));
-      } else {
-        data.append(key, formData[key]);
-      }
-    });
+    
+    // Localized fields as JSON
+    data.append('title', JSON.stringify({ id: formData.title_id, en: formData.title_en }));
+    data.append('category', JSON.stringify({ id: formData.category_id, en: formData.category_en }));
+    data.append('description', JSON.stringify({ id: formData.description_id, en: formData.description_en }));
+    
+    // Standard fields
+    data.append('technologies', JSON.stringify(formData.technologies.split(',').map(t => t.trim())));
+    data.append('demoUrl', formData.demoUrl);
+    data.append('githubUrl', formData.githubUrl);
+    data.append('featured', formData.featured);
     
     if (imageFile) {
       data.append('image', imageFile);
@@ -86,10 +126,18 @@ const ProjectManagement = () => {
   const openModal = (project = null) => {
     if (project) {
       setEditingProject(project);
+      
+      const titleObj = parseTranslated(project.title);
+      const categoryObj = parseTranslated(project.category);
+      const descObj = parseTranslated(project.description);
+
       setFormData({
-        title: project.title,
-        category: project.category,
-        description: project.description,
+        title_id: titleObj.id,
+        title_en: titleObj.en,
+        category_id: categoryObj.id,
+        category_en: categoryObj.en,
+        description_id: descObj.id,
+        description_en: descObj.en,
         technologies: Array.isArray(project.technologies) 
           ? project.technologies.join(', ') 
           : project.technologies || '',
@@ -100,9 +148,12 @@ const ProjectManagement = () => {
     } else {
       setEditingProject(null);
       setFormData({
-        title: '',
-        category: '',
-        description: '',
+        title_id: '',
+        title_en: '',
+        category_id: '',
+        category_en: '',
+        description_id: '',
+        description_en: '',
         technologies: '',
         demoUrl: '',
         githubUrl: '',
@@ -123,11 +174,7 @@ const ProjectManagement = () => {
   const getImageUrl = (image) => {
     if (!image) return 'https://via.placeholder.com/400x300/2a2a2a/ffa500?text=No+Image';
     if (image.startsWith('http')) return image;
-    
-    // Gunakan import.meta.env untuk Vite
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const baseUrl = apiUrl.replace('/api', '');
-    return `${baseUrl}${image}`;
+    return `${getBaseUrl()}${image}`;
   };
 
   return (
@@ -149,16 +196,16 @@ const ProjectManagement = () => {
               <div className="item-image">
                 <img 
                   src={getImageUrl(project.image)}
-                  alt={project.title}
+                  alt={translateText(project.title, 'id')}
                   onError={(e) => {
                     e.target.src = 'https://via.placeholder.com/400x300/2a2a2a/ffa500?text=Image+Not+Found';
                   }}
                 />
               </div>
               <div className="item-content">
-                <h3>{project.title}</h3>
-                <span className="item-category">{project.category}</span>
-                <p>{project.description}</p>
+                <h3>{translateText(project.title, 'id')}</h3>
+                <span className="item-category">{translateText(project.category, 'id')}</span>
+                <p>{translateText(project.description, 'id')}</p>
                 {project.technologies && project.technologies.length > 0 && (
                   <div className="project-tech-preview">
                     {project.technologies.slice(0, 3).map((tech, i) => (
@@ -185,40 +232,101 @@ const ProjectManagement = () => {
 
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
             <h2>{editingProject ? 'Edit Project' : 'Add New Project'}</h2>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Title *</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  required
-                  placeholder="e.g., E-Commerce Platform"
-                />
+              
+              {/* Bilingual Title */}
+              <div className="dual-lang-group">
+                <div className="form-group lang-field">
+                  <label>Title (ID) *</label>
+                  <input
+                    type="text"
+                    value={formData.title_id}
+                    onChange={(e) => setFormData({...formData, title_id: e.target.value})}
+                    required
+                    placeholder="e.g., Platform E-Commerce"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="translate-action-btn"
+                  onClick={() => handleTranslate('title', 'id')}
+                >
+                  Translate ID → EN
+                </button>
+                <div className="form-group lang-field">
+                  <label>Title (EN) *</label>
+                  <input
+                    type="text"
+                    value={formData.title_en}
+                    onChange={(e) => setFormData({...formData, title_en: e.target.value})}
+                    required
+                    placeholder="e.g., E-Commerce Platform"
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Category *</label>
-                <input
-                  type="text"
-                  value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  placeholder="e.g., Web Development, Mobile Apps, Web Design"
-                  required
-                />
+              {/* Bilingual Category */}
+              <div className="dual-lang-group">
+                <div className="form-group lang-field">
+                  <label>Category (ID) *</label>
+                  <input
+                    type="text"
+                    value={formData.category_id}
+                    onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                    placeholder="e.g., Pengembangan Web"
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="translate-action-btn"
+                  onClick={() => handleTranslate('category', 'id')}
+                >
+                  Translate ID → EN
+                </button>
+                <div className="form-group lang-field">
+                  <label>Category (EN) *</label>
+                  <input
+                    type="text"
+                    value={formData.category_en}
+                    onChange={(e) => setFormData({...formData, category_en: e.target.value})}
+                    placeholder="e.g., Web Development"
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Description *</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  rows="3"
-                  placeholder="Brief description of the project"
-                  required
-                />
+              {/* Bilingual Description */}
+              <div className="dual-lang-group">
+                <div className="form-group lang-field">
+                  <label>Description (ID) *</label>
+                  <textarea
+                    value={formData.description_id}
+                    onChange={(e) => setFormData({...formData, description_id: e.target.value})}
+                    rows="3"
+                    placeholder="Deskripsi singkat proyek..."
+                    required
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="translate-action-btn"
+                  onClick={() => handleTranslate('description', 'id')}
+                >
+                  Translate ID → EN
+                </button>
+                <div className="form-group lang-field">
+                  <label>Description (EN) *</label>
+                  <textarea
+                    value={formData.description_en}
+                    onChange={(e) => setFormData({...formData, description_en: e.target.value})}
+                    rows="3"
+                    placeholder="Brief description of the project..."
+                    required
+                  />
+                </div>
               </div>
 
               <div className="form-group">
@@ -246,24 +354,26 @@ const ProjectManagement = () => {
                 )}
               </div>
 
-              <div className="form-group">
-                <label>Demo URL</label>
-                <input
-                  type="url"
-                  value={formData.demoUrl}
-                  onChange={(e) => setFormData({...formData, demoUrl: e.target.value})}
-                  placeholder="https://demo-site.com"
-                />
-              </div>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Demo URL</label>
+                  <input
+                    type="url"
+                    value={formData.demoUrl}
+                    onChange={(e) => setFormData({...formData, demoUrl: e.target.value})}
+                    placeholder="https://demo-site.com"
+                  />
+                </div>
 
-              <div className="form-group">
-                <label>GitHub URL</label>
-                <input
-                  type="url"
-                  value={formData.githubUrl}
-                  onChange={(e) => setFormData({...formData, githubUrl: e.target.value})}
-                  placeholder="https://github.com/username/repo"
-                />
+                <div className="form-group">
+                  <label>GitHub URL</label>
+                  <input
+                    type="url"
+                    value={formData.githubUrl}
+                    onChange={(e) => setFormData({...formData, githubUrl: e.target.value})}
+                    placeholder="https://github.com/username/repo"
+                  />
+                </div>
               </div>
 
               <div className="form-group checkbox-group">

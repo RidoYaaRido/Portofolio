@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Education = require('../models/Education');
+const prisma = require('../config/prisma');
 const auth = require('../middleware/auth');
 
 // @route   GET /api/education
@@ -8,7 +8,12 @@ const auth = require('../middleware/auth');
 // @access  Public
 router.get('/', async (req, res) => {
   try {
-    const education = await Education.find().sort({ order: 1, createdAt: -1 });
+    const education = await prisma.education.findMany({
+      orderBy: [
+        { order: 'asc' },
+        { createdAt: 'desc' }
+      ]
+    });
     res.json(education);
   } catch (error) {
     console.error('Get education error:', error);
@@ -24,7 +29,9 @@ router.get('/', async (req, res) => {
 // @access  Public
 router.get('/:id', async (req, res) => {
   try {
-    const education = await Education.findById(req.params.id);
+    const education = await prisma.education.findUnique({
+      where: { id: req.params.id }
+    });
     
     if (!education) {
       return res.status(404).json({ 
@@ -47,8 +54,16 @@ router.get('/:id', async (req, res) => {
 // @access  Private
 router.post('/', auth, async (req, res) => {
   try {
-    const education = new Education(req.body);
-    await education.save();
+    const order = req.body.order !== undefined ? parseInt(req.body.order, 10) : 0;
+    const education = await prisma.education.create({
+      data: {
+        degree: req.body.degree || '',
+        institution: req.body.institution || '',
+        period: req.body.period || '',
+        description: req.body.description || '',
+        order
+      }
+    });
     
     res.status(201).json({ 
       message: 'Education created successfully', 
@@ -68,17 +83,22 @@ router.post('/', auth, async (req, res) => {
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
   try {
-    const education = await Education.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!education) {
-      return res.status(404).json({ 
-        message: 'Education not found' 
-      });
+    const updateData = {};
+    const stringFields = ['degree', 'institution', 'period', 'description'];
+    stringFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (req.body.order !== undefined) {
+      updateData.order = parseInt(req.body.order, 10);
     }
+
+    const education = await prisma.education.update({
+      where: { id: req.params.id },
+      data: updateData
+    });
     
     res.json({ 
       message: 'Education updated successfully', 
@@ -98,13 +118,9 @@ router.put('/:id', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const education = await Education.findByIdAndDelete(req.params.id);
-    
-    if (!education) {
-      return res.status(404).json({ 
-        message: 'Education not found' 
-      });
-    }
+    const education = await prisma.education.delete({
+      where: { id: req.params.id }
+    });
     
     res.json({ 
       message: 'Education deleted successfully' 

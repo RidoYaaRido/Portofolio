@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
-import { FiMail, FiPhone, FiCalendar, FiMapPin, FiGithub, FiLinkedin, FiTwitter, FiInstagram, FiChevronDown } from 'react-icons/fi';
-import api from '../../services/api';
+import { FiUser, FiFileText, FiGrid, FiBookOpen, FiMail, FiPhone, FiCalendar, FiMapPin, FiGithub, FiLinkedin, FiTwitter, FiInstagram, FiChevronDown } from 'react-icons/fi';
+import api, { getBaseUrl } from '../../services/api';
 import AboutSection from './about/AboutSection';
 import ResumeSection from './resume/ResumeSection';
 import PortfolioSection from './portofolio/PortfolioSection';
 import BlogSection from './blog/BlogSection';
 import ContactSection from './contact/ContactSection';
 import SkillsSlider from './skill/SkillsSlider';
-import '../../assets/css/Portfolio.css'; 
+import '../../assets/css/Portfolio.css';
 import '../../assets/css/LoadingStates.css';
 import avatar from '../../assets/avatar.png';
+import { translateText, dictionary } from '../../utils/translationHelper';
 
 const Page = () => {
+  const [lang, setLang] = useState(localStorage.getItem('lang') || 'id');
   const [profile, setProfile] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [ghostIcons, setGhostIcons] = useState({});
   const [projects, setProjects] = useState([]);
   const [skills, setSkills] = useState([]);
   const [blogs, setBlogs] = useState([]);
@@ -24,9 +27,28 @@ const Page = () => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const navItems = [
+    { id: 'about', icon: <FiUser /> },
+    { id: 'resume', icon: <FiFileText /> },
+    { id: 'portfolio', icon: <FiGrid /> },
+    { id: 'blog', icon: <FiBookOpen /> },
+    { id: 'contact', icon: <FiMail /> }
+  ];
+
+  const handleDockClick = (id) => {
+    setActiveSection(id);
+    setGhostIcons(prev => ({ ...prev, [id]: true }));
+    setTimeout(() => {
+      setGhostIcons(prev => ({ ...prev, [id]: false }));
+    }, 800);
+  };
+
+  const activeIndex = navItems.findIndex(item => item.id === activeSection);
+
   useEffect(() => {
     fetchData();
   }, []);
+
 
   // Handle scroll untuk hide/show nav di mobile
   useEffect(() => {
@@ -75,30 +97,12 @@ const Page = () => {
       
     } catch (error) {
       console.error('Error fetching data:', error);
-      
-      // Fallback ke dummy data jika API gagal
-      setProfile({
-        name: 'Rido Rifki Hakim',
-        title: 'Web Developer',
-        email: 'ridorifkihakim@gmail.com',
-        phone: '+62 858-8867-3602',
-        birthday: 'April 18',
-        location: 'Bekasi, Jawa Barat, Indonesia',
-        avatar: '/placeholder-avatar.jpg',
-        bio: 'I am a Web Developer who also has deep expertise in Web Design, Mobile App Development, and Software QA Testing. With a strong technical background and a keen attention to detail, I am committed to creating digital solutions that are not only aesthetically pleasing and user-friendly but also robust in terms of performance and functionality.',
-        social: {
-          github: 'https://github.com/johndoe',
-          linkedin: 'https://linkedin.com/in/johndoe',
-          twitter: 'https://twitter.com/johndoe',
-          instagram: 'https://instagram.com/johndoe'
-        }
-      });
-      
-      setSkills([
-        { _id: 1, name: 'JavaScript', level: 95, icon: '⚡', color: '#F7DF1E' },
-        { _id: 2, name: 'React', level: 90, icon: '⚛️', color: '#61DAFB' },
-        { _id: 3, name: 'Node.js', level: 85, icon: '🟢', color: '#339933' }
-      ]);
+      setProfile(null);
+      setProjects([]);
+      setSkills([]);
+      setBlogs([]);
+      setEducation([]);
+      setExperience([]);
     } finally {
       setLoading(false);
     }
@@ -107,23 +111,23 @@ const Page = () => {
   const services = [
     {
       icon: '🎨',
-      title: 'Web Design',
-      description: 'The most modern and high-quality design made at a professional level.'
+      title: lang === 'id' ? 'Desain Web' : 'Web Design',
+      description: lang === 'id' ? 'Desain paling modern dan berkualitas tinggi yang dibuat pada tingkat profesional.' : 'The most modern and high-quality design made at a professional level.'
     },
     {
       icon: '💻',
-      title: 'Web Development',
-      description: 'High-quality development of sites at the professional level.'
+      title: lang === 'id' ? 'Pengembangan Web' : 'Web Development',
+      description: lang === 'id' ? 'Pengembangan situs berkualitas tinggi pada tingkat profesional.' : 'High-quality development of sites at the professional level.'
     },
     {
       icon: '📱',
-      title: 'Mobile Apps',
-      description: 'Professional development of applications for iOS and Android.'
+      title: lang === 'id' ? 'Aplikasi Seluler' : 'Mobile Apps',
+      description: lang === 'id' ? 'Pengembangan aplikasi profesional untuk iOS dan Android.' : 'Professional development of applications for iOS and Android.'
     },
     {
       icon: '🔧',
-      title: 'Software QA / Tester',
-      description: 'Ensuring application quality through functional and usability testing.'
+      title: lang === 'id' ? 'Software QA / Tester' : 'Software QA / Tester',
+      description: lang === 'id' ? 'Memastikan kualitas aplikasi melalui pengujian fungsional dan kegunaan.' : 'Ensuring application quality through functional and usability testing.'
     }
   ];
 
@@ -132,7 +136,7 @@ const Page = () => {
       return (
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading...</p>
+          <p>{dictionary[lang].loading}</p>
         </div>
       );
     }
@@ -141,23 +145,23 @@ const Page = () => {
       case 'about':
         return (
           <>
-            <AboutSection profile={profile} services={services} />
+            <AboutSection profile={profile} services={services} lang={lang} />
             
             {/* Skills Slider - Technologies & Tools */}
             <section className="content-section">
-              <h2 className="section-title">Skills</h2>
-              <SkillsSlider skills={skills} />
+              <h2 className="section-title">{dictionary[lang].skills}</h2>
+              <SkillsSlider skills={skills} lang={lang} />
             </section>
           </>
         );
       case 'resume':
-        return <ResumeSection education={education} experience={experience} />;
+        return <ResumeSection education={education} experience={experience} lang={lang} />;
       case 'portfolio':
-        return <PortfolioSection projects={projects} />;
+        return <PortfolioSection projects={projects} lang={lang} />;
       case 'blog':
-        return <BlogSection blogs={blogs} />;
+        return <BlogSection blogs={blogs} lang={lang} />;
       case 'contact':
-        return <ContactSection profile={profile} />;
+        return <ContactSection profile={profile} lang={lang} />;
       default:
         return null;
     }
@@ -167,11 +171,7 @@ const Page = () => {
   const getAvatarUrl = () => {
     if (!profile?.avatar) return avatar;
     if (profile.avatar.startsWith('http')) return profile.avatar;
-    
-    // Gunakan import.meta.env untuk Vite, bukan process.env
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const baseUrl = apiUrl.replace('/api', '');
-    return `${baseUrl}${profile.avatar}`;
+    return `${getBaseUrl()}${profile.avatar}`;
   };
 
   return (
@@ -188,14 +188,30 @@ const Page = () => {
           </button>
 
           <div className="profile-header">
-             <div className="profile-avatar">
+            {/* Language Switcher */}
+            <div className="lang-switcher-sidebar">
+              <button 
+                className={`lang-btn ${lang === 'id' ? 'active' : ''}`}
+                onClick={() => { setLang('id'); localStorage.setItem('lang', 'id'); }}
+              >
+                ID
+              </button>
+              <span className="lang-divider">|</span>
+              <button 
+                className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
+                onClick={() => { setLang('en'); localStorage.setItem('lang', 'en'); }}
+              >
+                EN
+              </button>
+            </div>
+            <div className="profile-avatar">
               {profile && (
                 <img src={getAvatarUrl()} alt={profile.name} />
               )}
             </div>
             <div className="profile-text">
-              <h1 className="profile-name">{profile?.name || 'Loading...'}</h1>
-              <p className="profile-title">{profile?.title || 'Web Developer'}</p>
+              <h1 className="profile-name">{profile ? translateText(profile.name, lang) : 'Loading...'}</h1>
+              <p className="profile-title">{profile ? translateText(profile.title, lang) : 'Web Developer'}</p>
             </div>
           </div>
 
@@ -203,7 +219,7 @@ const Page = () => {
             <div className="info-item">
               <FiMail className="info-icon" />
               <div>
-                <span className="info-label">EMAIL</span>
+                <span className="info-label">{dictionary[lang].email}</span>
                 <a href={`mailto:${profile?.email}`} className="info-value">
                   {profile?.email || 'loading...'}
                 </a>
@@ -213,7 +229,7 @@ const Page = () => {
             <div className="info-item">
               <FiPhone className="info-icon" />
               <div>
-                <span className="info-label">PHONE</span>
+                <span className="info-label">{dictionary[lang].phone}</span>
                 <span className="info-value">{profile?.phone || '+62 XXX-XXXX-XXXX'}</span>
               </div>
             </div>
@@ -221,16 +237,16 @@ const Page = () => {
             <div className="info-item">
               <FiCalendar className="info-icon" />
               <div>
-                <span className="info-label">BIRTHDAY</span>
-                <span className="info-value">{profile?.birthday || 'April 18'}</span>
+                <span className="info-label">{dictionary[lang].birthday}</span>
+                <span className="info-value">{profile ? translateText(profile.birthday, lang) : 'April 18'}</span>
               </div>
             </div>
 
             <div className="info-item">
               <FiMapPin className="info-icon" />
               <div>
-                <span className="info-label">LOCATION</span>
-                <span className="info-value">{profile?.location || 'Jakarta, Indonesia'}</span>
+                <span className="info-label">{dictionary[lang].location}</span>
+                <span className="info-value">{profile ? translateText(profile.location, lang) : 'Jakarta, Indonesia'}</span>
               </div>
             </div>
           </div>
@@ -257,7 +273,8 @@ const Page = () => {
               </a>
             )}
           </div>
-        </div>
+
+          </div>
       </aside>
 
       {/* Main Content */}
@@ -267,44 +284,33 @@ const Page = () => {
             {/* Navigation dengan Title */}
             <div className="portfolio-header">
               <h2 className="page-title">
-                {activeSection === 'about' && 'About Me'}
-                {activeSection === 'resume' && 'Resume'}
-                {activeSection === 'portfolio' && 'Portfolio'}
-                {activeSection === 'blog' && 'Blog'}
-                {activeSection === 'contact' && 'Contact'}
+                {activeSection === 'about' && dictionary[lang].about}
+                {activeSection === 'resume' && dictionary[lang].resume}
+                {activeSection === 'portfolio' && dictionary[lang].portfolio}
+                {activeSection === 'blog' && dictionary[lang].blog}
+                {activeSection === 'contact' && dictionary[lang].contact}
               </h2>
               
-              <nav className={`portfolio-nav ${!isNavVisible ? 'nav-hidden' : ''}`}>
-                <button 
-                  className={activeSection === 'about' ? 'active' : ''} 
-                  onClick={() => setActiveSection('about')}
-                >
-                  About
-                </button>
-                <button 
-                  className={activeSection === 'resume' ? 'active' : ''} 
-                  onClick={() => setActiveSection('resume')}
-                >
-                  Resume
-                </button>
-                <button 
-                  className={activeSection === 'portfolio' ? 'active' : ''} 
-                  onClick={() => setActiveSection('portfolio')}
-                >
-                  Portfolio
-                </button>
-                <button 
-                  className={activeSection === 'blog' ? 'active' : ''} 
-                  onClick={() => setActiveSection('blog')}
-                >
-                  Blog
-                </button>
-                <button 
-                  className={activeSection === 'contact' ? 'active' : ''} 
-                  onClick={() => setActiveSection('contact')}
-                >
-                  Contact
-                </button>
+              <nav 
+                className={`portfolio-dock ${!isNavVisible ? 'dock-hidden' : ''}`}
+                style={{ '--active-index': activeIndex }}
+              >
+                <div className="dock-indicator"></div>
+                {navItems.map((item) => (
+                  <button 
+                    key={item.id}
+                    className={`dock-item ${activeSection === item.id ? 'active' : ''}`} 
+                    onClick={() => handleDockClick(item.id)}
+                  >
+                    <span className="dock-icon">{item.icon}</span>
+                    <span className="dock-label">{dictionary[lang][item.id]}</span>
+                    
+                    {/* Ghost Icon */}
+                    {ghostIcons[item.id] && (
+                      <span className="ghost-icon floating">{item.icon}</span>
+                    )}
+                  </button>
+                ))}
               </nav>
             </div>
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const prisma = require('../config/prisma');
 const { sendEmail } = require('../services/emailService');
 
 // POST /api/contact
@@ -25,8 +26,30 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Kirim email melalui service
-    await sendEmail({ name, email, subject, message });
+    // Ambil email penerima secara dinamis dari database profile
+    let recipientEmail = 'ridorifkihakim@gmail.com';
+    try {
+      const profile = await prisma.profile.findFirst();
+      if (profile && profile.email && !profile.email.includes('example.com') && profile.email.trim() !== '') {
+        recipientEmail = profile.email.trim();
+      } else if (process.env.EMAIL_USER) {
+        recipientEmail = process.env.EMAIL_USER;
+      }
+    } catch (dbError) {
+      console.error('Failed to fetch profile email from database:', dbError);
+      if (process.env.EMAIL_USER) {
+        recipientEmail = process.env.EMAIL_USER;
+      }
+    }
+
+    // Kirim email melalui service ke email pemilik
+    await sendEmail({ 
+      name, 
+      email, 
+      subject, 
+      message, 
+      to: recipientEmail 
+    });
 
     res.status(200).json({ 
       success: true, 

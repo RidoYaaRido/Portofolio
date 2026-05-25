@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import api from '../../services/api';
+import api, { getBaseUrl } from '../../services/api';
 import { FiEdit, FiTrash2, FiPlus, FiUpload, FiX } from 'react-icons/fi';
+import { translateTextApi, parseTranslated, translateText } from '../../utils/translationHelper';
+
+// Helper: use URL directly if already absolute, otherwise prepend base
+const resolveUrl = (url) => url && url.startsWith('http') ? url : `${getBaseUrl()}${url}`;
 
 const SkillManagement = () => {
   const [skills, setSkills] = useState([]);
@@ -10,13 +14,15 @@ const SkillManagement = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
+    name_id: '',
+    name_en: '',
     level: 50,
     icon: '⚡',
     iconType: 'emoji',
     color: '#ffa500',
     category: 'other',
-    description: ''
+    description_id: '',
+    description_en: ''
   });
 
   useEffect(() => {
@@ -29,6 +35,37 @@ const SkillManagement = () => {
       setSkills(response.data);
     } catch (error) {
       toast.error('Failed to fetch skills');
+    }
+  };
+
+  const handleTranslate = async (field, sourceLang) => {
+    let sourceText = '';
+    let targetLang = sourceLang === 'id' ? 'en' : 'id';
+
+    if (field === 'name') {
+      sourceText = sourceLang === 'id' ? formData.name_id : formData.name_en;
+    } else if (field === 'description') {
+      sourceText = sourceLang === 'id' ? formData.description_id : formData.description_en;
+    }
+
+    if (!sourceText || sourceText.trim() === '') {
+      toast.warning('Please enter source text first');
+      return;
+    }
+
+    try {
+      const toastId = toast.loading('Translating...');
+      const translated = await translateTextApi(sourceText, targetLang);
+      toast.dismiss(toastId);
+
+      const targetField = `${field}_${targetLang}`;
+      setFormData(prev => ({
+        ...prev,
+        [targetField]: translated
+      }));
+      toast.success('Translated successfully!');
+    } catch (error) {
+      toast.error('Translation failed');
     }
   };
 
@@ -62,10 +99,16 @@ const SkillManagement = () => {
     try {
       const submitData = new FormData();
       
-      // Append all form fields
-      Object.keys(formData).forEach(key => {
-        submitData.append(key, formData[key]);
-      });
+      // Localized fields as JSON strings
+      submitData.append('name', JSON.stringify({ id: formData.name_id, en: formData.name_en }));
+      submitData.append('description', JSON.stringify({ id: formData.description_id, en: formData.description_en }));
+      
+      // Standard fields
+      submitData.append('level', formData.level);
+      submitData.append('icon', formData.icon);
+      submitData.append('iconType', formData.iconType);
+      submitData.append('color', formData.color);
+      submitData.append('category', formData.category);
 
       // Append file if selected
       if (selectedFile) {
@@ -111,28 +154,35 @@ const SkillManagement = () => {
   const openModal = (skill = null) => {
     setEditingSkill(skill);
     if (skill) {
+      const nameObj = parseTranslated(skill.name);
+      const descObj = parseTranslated(skill.description);
+      
       setFormData({
-        name: skill.name,
+        name_id: nameObj.id,
+        name_en: nameObj.en,
         level: skill.level,
         icon: skill.icon || '⚡',
         iconType: skill.iconType || 'emoji',
         color: skill.color,
         category: skill.category,
-        description: skill.description || ''
+        description_id: descObj.id,
+        description_en: descObj.en
       });
       
       if (skill.iconType === 'image' && skill.iconUrl) {
-        setImagePreview(`http://localhost:5000${skill.iconUrl}`);
+        setImagePreview(resolveUrl(skill.iconUrl));
       }
     } else {
       setFormData({
-        name: '',
+        name_id: '',
+        name_en: '',
         level: 50,
         icon: '⚡',
         iconType: 'emoji',
         color: '#ffa500',
         category: 'other',
-        description: ''
+        description_id: '',
+        description_en: ''
       });
       setImagePreview(null);
       setSelectedFile(null);
@@ -151,8 +201,8 @@ const SkillManagement = () => {
     if (skill.iconType === 'image' && skill.iconUrl) {
       return (
         <img 
-          src={`http://localhost:5000${skill.iconUrl}`} 
-          alt={skill.name}
+          src={resolveUrl(skill.iconUrl)} 
+          alt={translateText(skill.name, 'id')}
           style={{ width: '30px', height: '30px', objectFit: 'contain' }}
         />
       );
@@ -183,7 +233,7 @@ const SkillManagement = () => {
           {skills.map(skill => (
             <tr key={skill._id}>
               <td>{renderSkillIcon(skill)}</td>
-              <td>{skill.name}</td>
+              <td>{translateText(skill.name, 'id')}</td>
               <td>
                 <div className="progress-bar">
                   <div 
@@ -222,14 +272,36 @@ const SkillManagement = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>{editingSkill ? 'Edit Skill' : 'Add Skill'}</h2>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Name *</label>
-                <input 
-                  type="text" 
-                  value={formData.name} 
-                  onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                  required 
-                />
+              
+              {/* Bilingual Skill Name */}
+              <div className="dual-lang-group">
+                <div className="form-group lang-field">
+                  <label>Name (ID) *</label>
+                  <input 
+                    type="text" 
+                    value={formData.name_id} 
+                    onChange={(e) => setFormData({...formData, name_id: e.target.value})} 
+                    placeholder="e.g., Dasar JavaScript"
+                    required 
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="translate-action-btn"
+                  onClick={() => handleTranslate('name', 'id')}
+                >
+                  Translate ID → EN
+                </button>
+                <div className="form-group lang-field">
+                  <label>Name (EN) *</label>
+                  <input 
+                    type="text" 
+                    value={formData.name_en} 
+                    onChange={(e) => setFormData({...formData, name_en: e.target.value})} 
+                    placeholder="e.g., JavaScript Basics"
+                    required 
+                  />
+                </div>
               </div>
 
               <div className="form-group">
@@ -401,15 +473,33 @@ const SkillManagement = () => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Description (Optional)</label>
-                <textarea 
-                  value={formData.description} 
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  rows="3"
-                  placeholder="Brief description of your skill level or experience..."
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
+              {/* Bilingual Description */}
+              <div className="dual-lang-group">
+                <div className="form-group lang-field">
+                  <label>Description (ID)</label>
+                  <textarea 
+                    value={formData.description_id} 
+                    onChange={(e) => setFormData({...formData, description_id: e.target.value})}
+                    rows="3"
+                    placeholder="Deskripsi singkat keahlian..."
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="translate-action-btn"
+                  onClick={() => handleTranslate('description', 'id')}
+                >
+                  Translate ID → EN
+                </button>
+                <div className="form-group lang-field">
+                  <label>Description (EN)</label>
+                  <textarea 
+                    value={formData.description_en} 
+                    onChange={(e) => setFormData({...formData, description_en: e.target.value})}
+                    rows="3"
+                    placeholder="Brief description of your skill..."
+                  />
+                </div>
               </div>
 
               <div className="modal-actions">

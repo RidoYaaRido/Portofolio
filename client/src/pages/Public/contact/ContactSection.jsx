@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { FiMail, FiPhone, FiMapPin, FiSend } from 'react-icons/fi';
 import api from '@/services/api';
+import { translateText, dictionary } from '../../../utils/translationHelper';
 
-const ContactSection = ({ profile }) => {
+const ContactSection = ({ profile, lang = 'id' }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,7 +51,7 @@ const ContactSection = ({ profile }) => {
               <FiMail />
             </div>
             <div>
-              <h4 className="contact-label">Email</h4>
+              <h4 className="contact-label">{lang === 'id' ? 'Surel' : 'Email'}</h4>
               <a href={`mailto:${profile?.email || 'ridorifkihakim@gmail.com'}`} className="contact-value">
                 {profile?.email || 'ridorifkihakim@gmail.com'}
               </a>
@@ -62,7 +63,7 @@ const ContactSection = ({ profile }) => {
               <FiPhone />
             </div>
             <div>
-              <h4 className="contact-label">Phone</h4>
+              <h4 className="contact-label">{lang === 'id' ? 'Telepon' : 'Phone'}</h4>
               <a href={`tel:${profile?.phone || '+62-XXX-XXXX-XXXX'}`} className="contact-value">
                 {profile?.phone || '+62-XXX-XXXX-XXXX'}
               </a>
@@ -74,8 +75,8 @@ const ContactSection = ({ profile }) => {
               <FiMapPin />
             </div>
             <div>
-              <h4 className="contact-label">Location</h4>
-              <p className="contact-value">{profile?.location || 'Jakarta, Indonesia'}</p>
+              <h4 className="contact-label">{lang === 'id' ? 'Lokasi' : 'Location'}</h4>
+              <p className="contact-value">{profile ? translateText(profile.location, lang) : 'Jakarta, Indonesia'}</p>
             </div>
           </div>
         </div>
@@ -84,7 +85,7 @@ const ContactSection = ({ profile }) => {
         <form className="contact-form" onSubmit={handleSubmit}>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="name">Full Name *</label>
+              <label htmlFor="name">{dictionary[lang].name} *</label>
               <input
                 type="text"
                 id="name"
@@ -93,12 +94,12 @@ const ContactSection = ({ profile }) => {
                 onChange={handleChange}
                 required
                 disabled={status === 'sending'}
-                placeholder="Enter your name"
+                placeholder={dictionary[lang].formNamePlaceholder}
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email Address *</label>
+              <label htmlFor="email">{dictionary[lang].emailLabel} *</label>
               <input
                 type="email"
                 id="email"
@@ -107,13 +108,13 @@ const ContactSection = ({ profile }) => {
                 onChange={handleChange}
                 required
                 disabled={status === 'sending'}
-                placeholder="Enter your email"
+                placeholder={dictionary[lang].formEmailPlaceholder}
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="subject">Subject *</label>
+            <label htmlFor="subject">{dictionary[lang].subject} *</label>
             <input
               type="text"
               id="subject"
@@ -122,12 +123,12 @@ const ContactSection = ({ profile }) => {
               onChange={handleChange}
               required
               disabled={status === 'sending'}
-              placeholder="Enter subject"
+              placeholder={lang === 'id' ? 'Masukkan subjek' : 'Enter subject'}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="message">Message *</label>
+            <label htmlFor="message">{dictionary[lang].message} *</label>
             <textarea
               id="message"
               name="message"
@@ -136,7 +137,7 @@ const ContactSection = ({ profile }) => {
               required
               disabled={status === 'sending'}
               rows="6"
-              placeholder="Write your message here..."
+              placeholder={dictionary[lang].formMessagePlaceholder}
             ></textarea>
           </div>
 
@@ -146,19 +147,19 @@ const ContactSection = ({ profile }) => {
             disabled={status === 'sending'}
           >
             {status === 'sending' ? (
-              <>Sending...</>
+              <>{dictionary[lang].sending}</>
             ) : status === 'success' ? (
-              <>Sent Successfully! ✓</>
+              <>{lang === 'id' ? 'Terkirim! ✓' : 'Sent Successfully! ✓'}</>
             ) : (
               <>
-                <FiSend /> Send Message
+                <FiSend /> {dictionary[lang].sendMessage}
               </>
             )}
           </button>
 
           {status === 'success' && (
             <div className="success-message">
-              ✓ Your message has been sent successfully!
+              ✓ {dictionary[lang].successContact}
             </div>
           )}
 
@@ -168,7 +169,7 @@ const ContactSection = ({ profile }) => {
               backgroundColor: 'rgba(255, 68, 68, 0.1)', 
               color: '#ff6666' 
             }}>
-              ✕ Failed to send message. Please try again later.
+              ✕ {dictionary[lang].failedContact}
             </div>
           )}
         </form>

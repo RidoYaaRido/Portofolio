@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { FiX, FiExternalLink, FiGithub } from 'react-icons/fi';
+import { getBaseUrl } from '../../../services/api';
+import { translateText, dictionary } from '../../../utils/translationHelper';
+import '@/assets/css/SkillsSlider.css';
 
-const PortfolioSection = ({ projects = [] }) => {
+const PortfolioSection = ({ projects = [], lang = 'id' }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedProject, setSelectedProject] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -11,64 +14,24 @@ const PortfolioSection = ({ projects = [] }) => {
     console.log('PortfolioSection - Projects count:', projects.length);
   }, [projects]);
 
-  // Fallback dummy data jika projects kosong
-  const dummyProjects = [
-    {
-      _id: 'dummy-1',
-      title: 'E-Commerce Platform',
-      category: 'Web Development',
-      image: 'https://via.placeholder.com/400x300/2a2a2a/ffa500?text=E-Commerce',
-      description: 'Full-featured e-commerce platform with payment integration',
-      technologies: ['React', 'Node.js', 'MongoDB', 'Stripe'],
-      demoUrl: '',
-      githubUrl: ''
-    },
-    {
-      _id: 'dummy-2',
-      title: 'Mobile Banking App',
-      category: 'Mobile Apps',
-      image: 'https://via.placeholder.com/400x300/2a2a2a/3b82f6?text=Banking+App',
-      description: 'Secure mobile banking application with biometric authentication',
-      technologies: ['React Native', 'Firebase', 'Redux'],
-      demoUrl: '',
-      githubUrl: ''
-    },
-    {
-      _id: 'dummy-3',
-      title: 'Portfolio Website',
-      category: 'Web Design',
-      image: 'https://via.placeholder.com/400x300/2a2a2a/10b981?text=Portfolio',
-      description: 'Modern portfolio website with smooth animations',
-      technologies: ['React', 'GSAP', 'Tailwind CSS'],
-      demoUrl: '',
-      githubUrl: ''
-    }
-  ];
-
-  const projectsData = projects.length > 0 ? projects : dummyProjects;
+  const projectsData = projects;
 
   useEffect(() => {
     console.log('PortfolioSection - Using data:', projectsData);
     console.log('PortfolioSection - Using backend data:', projects.length > 0);
   }, [projectsData, projects.length]);
 
-  const categories = ['all', ...new Set(projectsData.map(p => p.category))];
+  const categories = ['all', ...new Set(projectsData.map(p => translateText(p.category, lang)))];
 
   const filteredProjects = activeFilter === 'all'
     ? projectsData
-    : projectsData.filter(p => p.category === activeFilter);
+    : projectsData.filter(p => translateText(p.category, lang) === activeFilter);
 
   // Helper untuk mendapatkan URL gambar - FIXED untuk Vite
   const getImageUrl = (image) => {
     if (!image) return 'https://via.placeholder.com/400x300/2a2a2a/ffa500?text=No+Image';
     if (image.startsWith('http')) return image;
-
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    const baseUrl = apiUrl.replace('/api', '');
-    const fullUrl = `${baseUrl}${image}`;
-
-    console.log('Image URL:', { original: image, full: fullUrl });
-    return fullUrl;
+    return `${getBaseUrl()}${image}`;
   };
 
   // --- Dialog handlers (sama pattern seperti SkillsSlider) ---
@@ -118,7 +81,7 @@ const PortfolioSection = ({ projects = [] }) => {
             className={`filter-btn ${activeFilter === category ? 'active' : ''}`}
             onClick={() => setActiveFilter(category)}
           >
-            {category}
+            {category === 'all' ? (lang === 'id' ? 'Semua' : 'All') : category}
           </button>
         ))}
       </div>
@@ -134,15 +97,15 @@ const PortfolioSection = ({ projects = [] }) => {
             >
               <img
                 src={getImageUrl(project.image)}
-                alt={project.title}
+                alt={translateText(project.title, lang)}
                 onError={(e) => {
                   console.error('Image failed to load:', project.image);
                   e.target.src = 'https://via.placeholder.com/400x300/2a2a2a/ffa500?text=Image+Error';
                 }}
               />
               <div className="project-overlay">
-                <h3>{project.title}</h3>
-                <p>{project.category}</p>
+                <h3>{translateText(project.title, lang)}</h3>
+                <p>{translateText(project.category, lang)}</p>
                 {project.technologies && project.technologies.length > 0 && (
                   <div className="project-tech">
                     {project.technologies.map((tech, i) => (
@@ -157,7 +120,7 @@ const PortfolioSection = ({ projects = [] }) => {
                   opacity: 0.7,
                   fontStyle: 'italic'
                 }}>
-                  Tap for details
+                  {dictionary[lang].tapForDetails}
                 </p>
               </div>
             </div>
@@ -167,7 +130,7 @@ const PortfolioSection = ({ projects = [] }) => {
 
       {filteredProjects.length === 0 && (
         <div className="empty-state">
-          <p>No projects available in this category.</p>
+          <p>{dictionary[lang].noProjects}</p>
         </div>
       )}
 
@@ -182,67 +145,34 @@ const PortfolioSection = ({ projects = [] }) => {
             onClick={(e) => e.stopPropagation()}
             style={{ '--skill-color': getCategoryColor(selectedProject.category) }}
           >
-            {/* Header: Full-width background image */}
-            <div style={{
-              position: 'relative',
-              width: '100%',
-              height: '220px',
-              overflow: 'hidden',
-              borderRadius: '12px 12px 0 0',
-              marginTop: '-1px'
-            }}>
-              {/* Project image as background */}
+            {/* Header: Full-width background image with title */}
+            <div className="project-dialog-header">
               <img
                 src={getImageUrl(selectedProject.image)}
-                alt={selectedProject.title}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block'
-                }}
+                alt={translateText(selectedProject.title, lang)}
+                className="project-dialog-image"
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/600x220/1a1a2e/ffa500?text=No+Image';
                 }}
               />
-              {/* Dark gradient overlay bawah untuk readability title */}
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0.85) 100%)'
-              }} />
-              {/* Close button — float di atas gambar */}
+              <div className="project-dialog-overlay-gradient" />
               <button
                 className="dialog-close-btn"
                 onClick={closeDialog}
-                style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 2 }}
               >
                 <FiX />
               </button>
-              {/* Title di bawah gambar */}
-              <h2 style={{
-                position: 'absolute',
-                bottom: '16px',
-                left: '20px',
-                right: '20px',
-                margin: 0,
-                color: '#fff',
-                fontSize: '20px',
-                fontWeight: '600',
-                textShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                zIndex: 1
-              }}>
-                {selectedProject.title}
+              <h2 className="project-dialog-title">
+                {translateText(selectedProject.title, lang)}
               </h2>
             </div>
 
             {/* Content */}
             <div className="dialog-content">
-
               {/* Category + Featured Badge Row */}
               <div className="skill-info-row">
                 <div className="skill-info-item">
-                  <span className="info-label">Category</span>
+                  <span className="info-label">{dictionary[lang].category}</span>
                   <div
                     className="category-badge"
                     style={{ backgroundColor: getCategoryColor(selectedProject.category) }}
@@ -251,21 +181,21 @@ const PortfolioSection = ({ projects = [] }) => {
                       {getCategoryIcon(selectedProject.category)}
                     </span>
                     <span className="category-name">
-                      {selectedProject.category}
+                      {translateText(selectedProject.category, lang)}
                     </span>
                   </div>
                 </div>
 
                 {selectedProject.featured && (
                   <div className="skill-info-item">
-                    <span className="info-label">Status</span>
+                    <span className="info-label">{dictionary[lang].status}</span>
                     <div
                       className="category-badge"
                       style={{ backgroundColor: '#FFD700' }}
                     >
                       <span className="category-icon">⭐</span>
                       <span className="category-name" style={{ color: '#1a1a2e' }}>
-                        Featured
+                        {dictionary[lang].featured}
                       </span>
                     </div>
                   </div>
@@ -274,33 +204,19 @@ const PortfolioSection = ({ projects = [] }) => {
 
               {/* Description */}
               <div className="skill-description">
-                <h3>Description</h3>
-                <p>{selectedProject.description || 'No description available.'}</p>
+                <h3>{dictionary[lang].description}</h3>
+                <p>{translateText(selectedProject.description, lang) || dictionary[lang].noDescription}</p>
               </div>
 
               {/* Technologies */}
               {selectedProject.technologies && selectedProject.technologies.length > 0 && (
                 <div className="skill-description">
-                  <h3>Technologies</h3>
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                    marginTop: '8px'
-                  }}>
+                  <h3>{dictionary[lang].technologies}</h3>
+                  <div className="project-tech-container">
                     {selectedProject.technologies.map((tech, i) => (
                       <span
                         key={i}
-                        style={{
-                          display: 'inline-block',
-                          padding: '5px 12px',
-                          borderRadius: '20px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                          background: 'rgba(255,255,255,0.08)',
-                          border: `1px solid ${getCategoryColor(selectedProject.category)}55`,
-                          color: getCategoryColor(selectedProject.category),
-                        }}
+                        className="project-tech-tag"
                       >
                         {tech}
                       </span>
@@ -311,35 +227,15 @@ const PortfolioSection = ({ projects = [] }) => {
 
               {/* Links: Demo & GitHub */}
               {(selectedProject.demoUrl || selectedProject.githubUrl) && (
-                <div style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginTop: '20px'
-                }}>
+                <div className="project-links-container">
                   {selectedProject.demoUrl && (
                     <a
                       href={selectedProject.demoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        padding: '10px 16px',
-                        borderRadius: '8px',
-                        background: getCategoryColor(selectedProject.category),
-                        color: '#fff',
-                        textDecoration: 'none',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        transition: 'opacity 0.2s',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                      className="project-btn project-btn-primary"
                     >
-                      <FiExternalLink size={15} /> Live Demo
+                      <FiExternalLink size={15} /> {dictionary[lang].liveDemo}
                     </a>
                   )}
                   {selectedProject.githubUrl && (
@@ -347,26 +243,9 @@ const PortfolioSection = ({ projects = [] }) => {
                       href={selectedProject.githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        padding: '10px 16px',
-                        borderRadius: '8px',
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.15)',
-                        color: '#fff',
-                        textDecoration: 'none',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        transition: 'opacity 0.2s',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
-                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                      className="project-btn project-btn-secondary"
                     >
-                      <FiGithub size={15} /> GitHub
+                      <FiGithub size={15} /> {dictionary[lang].githubRepo}
                     </a>
                   )}
                 </div>

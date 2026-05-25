@@ -1,45 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { FiX } from 'react-icons/fi';
 import '@/assets/css/SkillsSlider.css';
+import { getBaseUrl } from '../../../services/api';
+import { translateText, dictionary } from '../../../utils/translationHelper';
 
-const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
-  const [skills, setSkills] = useState([]);
-  const [loading, setLoading] = useState(true);
+const SkillsSlider = ({ skills = [], lang = 'id' }) => {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const sliderRef = useRef(null);
   const animationRef = useRef(null);
 
   useEffect(() => {
-    fetchSkills();
-  }, []);
-
-  const fetchSkills = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`http://localhost:5000/api${apiEndpoint}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch skills');
-      }
-
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        setSkills(data);
-      } else {
-        setSkills([]);
-      }
-    } catch (error) {
-      console.error('Error fetching skills:', error);
-      setSkills([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (loading || skills.length === 0) return;
+    if (skills.length === 0) return;
 
     const slider = sliderRef.current;
     if (!slider) return;
@@ -81,7 +53,7 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
       slider.removeEventListener('mouseenter', handleMouseEnter);
       slider.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [loading, skills, showDialog]);
+  }, [skills, showDialog]);
 
   const handleSkillClick = (skill) => {
     setSelectedSkill(skill);
@@ -121,23 +93,34 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
 
   const getCategoryLabel = (category) => {
     const labels = {
-      frontend: 'Frontend Development',
-      backend: 'Backend Development',
-      database: 'Database Management',
-      tools: 'Development Tools',
-      devops: 'DevOps & Infrastructure',
-      design: 'Design & UI/UX',
-      other: 'Other Skills'
+      id: {
+        frontend: 'Pengembangan Frontend',
+        backend: 'Pengembangan Backend',
+        database: 'Pengelolaan Database',
+        tools: 'Alat Pengembangan',
+        devops: 'DevOps & Infrastruktur',
+        design: 'Desain & UI/UX',
+        other: 'Keahlian Lainnya'
+      },
+      en: {
+        frontend: 'Frontend Development',
+        backend: 'Backend Development',
+        database: 'Database Management',
+        tools: 'Development Tools',
+        devops: 'DevOps & Infrastructure',
+        design: 'Design & UI/UX',
+        other: 'Other Skills'
+      }
     };
-    return labels[category] || category;
+    return labels[lang]?.[category] || category;
   };
 
   const getLevelLabel = (level) => {
-    if (level >= 90) return 'Expert';
-    if (level >= 75) return 'Advanced';
-    if (level >= 60) return 'Intermediate';
-    if (level >= 40) return 'Competent';
-    return 'Beginner';
+    if (level >= 90) return dictionary[lang].expert;
+    if (level >= 75) return dictionary[lang].advanced;
+    if (level >= 60) return dictionary[lang].intermediate;
+    if (level >= 40) return dictionary[lang].competent;
+    return dictionary[lang].beginner;
   };
 
   const renderSkillIcon = (skill) => {
@@ -145,8 +128,8 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
       return (
         <>
           <img 
-            src={`http://localhost:5000${skill.iconUrl}`} 
-            alt={skill.name} 
+            src={skill.iconUrl.startsWith('http') ? skill.iconUrl : `${getBaseUrl()}${skill.iconUrl}`} 
+            alt={translateText(skill.name, lang)} 
             className="skill-logo-image"
             onError={(e) => {
               e.target.style.display = 'none';
@@ -164,24 +147,13 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
     return <span className="skill-logo-emoji">{skill.icon || '⚡'}</span>;
   };
 
-  if (loading) {
-    return (
-      <div className="skills-slider-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading skills...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (skills.length === 0) {
     return (
       <div className="skills-slider-container">
         <div className="empty-state">
-          <p>No skills available yet</p>
+          <p>{lang === 'id' ? 'Belum ada keahlian yang tersedia' : 'No skills available yet'}</p>
           <p style={{ fontSize: '14px', color: '#999', marginTop: '10px' }}>
-            Skills will appear here once added by admin
+            {lang === 'id' ? 'Keahlian akan muncul di sini setelah ditambahkan oleh admin' : 'Skills will appear here once added by admin'}
           </p>
         </div>
       </div>
@@ -203,7 +175,7 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
                 <div className="skill-logo-icon">
                   {renderSkillIcon(skill)}
                 </div>
-                <span className="skill-logo-name">{skill.name}</span>
+                <span className="skill-logo-name">{translateText(skill.name, lang)}</span>
               </div>
             ))}
           </div>
@@ -228,14 +200,14 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
               <div className="dialog-icon">
                 {renderSkillIcon(selectedSkill)}
               </div>
-              <h2>{selectedSkill.name}</h2>
+              <h2>{translateText(selectedSkill.name, lang)}</h2>
             </div>
 
             <div className="dialog-content">
               {/* Category & Level Info */}
               <div className="skill-info-row">
                 <div className="skill-info-item">
-                  <span className="info-label">Category</span>
+                  <span className="info-label">{dictionary[lang].category}</span>
                   <div 
                     className="category-badge" 
                     style={{ backgroundColor: getCategoryColor(selectedSkill.category) }}
@@ -250,7 +222,7 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
                 </div>
 
                 <div className="skill-info-item">
-                  <span className="info-label">Proficiency Level</span>
+                  <span className="info-label">{lang === 'id' ? 'Tingkat Kemahiran' : 'Proficiency Level'}</span>
                   <div className="level-display">
                     <div className="level-bar-container">
                       <div 
@@ -294,20 +266,28 @@ const SkillsSlider = ({ apiEndpoint = '/skills' }) => {
               {/* Description */}
               {selectedSkill.description && (
                 <div className="skill-description">
-                  <h3>About this skill</h3>
-                  <p>{selectedSkill.description}</p>
+                  <h3>{dictionary[lang].aboutSkill}</h3>
+                  <p>{translateText(selectedSkill.description, lang)}</p>
                 </div>
               )}
 
               {/* Additional Info if no description */}
               {!selectedSkill.description && (
                 <div className="skill-description">
-                  <h3>Skill Overview</h3>
-                  <p>
-                    I have achieved a {getLevelLabel(selectedSkill.level).toLowerCase()} level 
-                    in {selectedSkill.name}, with {selectedSkill.level}% proficiency. 
-                    This skill falls under the {getCategoryLabel(selectedSkill.category).toLowerCase()} category.
-                  </p>
+                  <h3>{dictionary[lang].skillOverview}</h3>
+                  {lang === 'id' ? (
+                    <p>
+                      Saya telah mencapai tingkat {getLevelLabel(selectedSkill.level).toLowerCase()} 
+                      dalam {translateText(selectedSkill.name, lang)}, dengan kemahiran {selectedSkill.level}%. 
+                      Keahlian ini termasuk dalam kategori {getCategoryLabel(selectedSkill.category).toLowerCase()}.
+                    </p>
+                  ) : (
+                    <p>
+                      I have achieved an {getLevelLabel(selectedSkill.level).toLowerCase()} level 
+                      in {translateText(selectedSkill.name, lang)}, with {selectedSkill.level}% proficiency. 
+                      This skill falls under the {getCategoryLabel(selectedSkill.category).toLowerCase()} category.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

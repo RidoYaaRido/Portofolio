@@ -1,44 +1,40 @@
 const express = require('express');
 const router = express.Router();
-const Profile = require('../models/Profile');
+const prisma = require('../config/prisma');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
-// Multer configuration for file upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+const { uploadToSupabase } = require('../utils/storageHelper');
 
+// Multer configuration for memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Get Profile
 router.get('/', async (req, res) => {
   try {
-    let profile = await Profile.findOne();
+    let profile = await prisma.profile.findFirst();
     
     if (!profile) {
       // Create default profile if none exists
-      profile = new Profile({
-        name: 'Your Name',
-        title: 'Web Developer',
-        email: 'your.email@example.com',
-        phone: '+62 XXX-XXXX-XXXX',
-        birthday: 'January 1',
-        location: 'Jakarta, Indonesia',
-        bio: 'Add your bio here',
-        social: {
-          github: '',
-          linkedin: '',
-          twitter: ''
+      profile = await prisma.profile.create({
+        data: {
+          name: 'Your Name',
+          title: 'Web Developer',
+          email: 'your.email@example.com',
+          phone: '+62 XXX-XXXX-XXXX',
+          birthday: 'January 1',
+          location: 'Jakarta, Indonesia',
+          bio: 'Add your bio here',
+          social: {
+            github: '',
+            linkedin: '',
+            twitter: '',
+            instagram: ''
+          }
         }
       });
-      await profile.save();
     }
     
     res.json(profile);
@@ -53,24 +49,43 @@ router.put('/', auth, upload.single('avatar'), async (req, res) => {
     const updateData = { ...req.body };
     
     if (req.file) {
-      updateData.avatar = `/uploads/${req.file.filename}`;
+      updateData.avatar = await uploadToSupabase(req.file, 'avatars');
     }
     
     if (req.body.social) {
       updateData.social = JSON.parse(req.body.social);
     }
     
-    updateData.updatedAt = Date.now();
-    
-    let profile = await Profile.findOne();
+    let profile = await prisma.profile.findFirst();
     
     if (!profile) {
-      profile = new Profile(updateData);
+      profile = await prisma.profile.create({
+        data: {
+          name: updateData.name || '',
+          title: updateData.title || '',
+          email: updateData.email || '',
+          phone: updateData.phone || '',
+          birthday: updateData.birthday || '',
+          location: updateData.location || '',
+          bio: updateData.bio || '',
+          avatar: updateData.avatar || '',
+          social: updateData.social || {}
+        }
+      });
     } else {
-      Object.assign(profile, updateData);
+      const cleanData = {};
+      const fields = ['name', 'title', 'email', 'phone', 'birthday', 'location', 'avatar', 'bio', 'social'];
+      fields.forEach(field => {
+        if (updateData[field] !== undefined) {
+          cleanData[field] = updateData[field];
+        }
+      });
+
+      profile = await prisma.profile.update({
+        where: { id: profile.id },
+        data: cleanData
+      });
     }
-    
-    await profile.save();
     
     res.json({ message: 'Profile updated successfully', profile });
   } catch (error) {

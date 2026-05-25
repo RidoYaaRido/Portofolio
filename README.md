@@ -1,5 +1,7 @@
 # Portfolio Full-Stack Application
 
+#  pw: EvhTB0XCGGmWvus0
+
 Portfolio website dengan admin dashboard untuk mengelola projects, skills, testimonials, dan profile. Dibangun dengan **React + Vite** untuk frontend dan **Express + MongoDB** untuk backend.
 
 ## 🚀 Features

@@ -11,8 +11,8 @@
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 165, 0, 0.1);
-  border-top-color: #ffa500;
+  border: 4px solid rgba(176, 228, 204, 0.1);
+  border-top-color: #B0E4CC;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -55,7 +55,7 @@
 .error-state button {
   margin-top: 1rem;
   padding: 0.75rem 1.5rem;
-  background: #ffa500;
+  background: #B0E4CC;
   color: white;
   border: none;
   border-radius: 8px;
@@ -65,7 +65,7 @@
 }
 
 .error-state button:hover {
-  background: #ff8c00;
+  background: #90d3b6;
   transform: translateY(-2px);
 }
 

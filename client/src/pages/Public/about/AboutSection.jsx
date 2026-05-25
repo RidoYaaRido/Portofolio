@@ -1,16 +1,18 @@
-const AboutSection = ({ profile, services }) => {
+import { translateText, dictionary } from '../../../utils/translationHelper';
+
+const AboutSection = ({ profile, services, lang = 'id' }) => {
   return (
     <>
       <section className="content-section">
         <div className="about-content">
           <p className="about-text">
-            {profile?.bio || `I am a Web Developer who also has deep expertise in Web Design, Mobile App Development, and Software QA Testing. With a strong technical background and a keen attention to detail, I am committed to creating digital solutions that are not only aesthetically pleasing and user-friendly but also robust in terms of performance and functionality.`}
+            {profile ? translateText(profile.bio, lang) : ''}
           </p>
         </div>
       </section>
 
       <section className="content-section">
-        <h2 className="section-title">What I'm Doing</h2>
+        <h2 className="section-title">{dictionary[lang].whatImDoing}</h2>
         <div className="services-grid">
           {services.map((service, index) => (
             <div key={index} className="service-card">

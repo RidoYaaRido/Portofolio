@@ -19,12 +19,13 @@ const transporter = nodemailer.createTransport({
  * @param {string} params.email    - Email pengirim (dipakai sebagai Reply-To)
  * @param {string} params.subject  - Subject dari form
  * @param {string} params.message  - Pesan dari form
+ * @param {string} params.to       - Email penerima (pemilik site)
  */
-const sendEmail = async ({ name, email, subject, message }) => {
+const sendEmail = async ({ name, email, subject, message, to }) => {
   const mailOptions = {
     from: `"${name}" <${process.env.EMAIL_USER}>`,   // Sender harus = EMAIL_USER untuk Gmail
     replyTo: `"${name}" <${email}>`,                  // Reply langsung ke visitor
-    to: process.env.EMAIL_USER,                       // Penerima = pemilik site
+    to: to || process.env.EMAIL_USER || 'ridorifkihakim@gmail.com',                       // Penerima = pemilik site
     subject: `[Portfolio Contact] ${subject}`,        // Prefix biar mudah disaring di inbox
     html: `
       <!DOCTYPE html>

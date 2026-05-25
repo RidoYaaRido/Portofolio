@@ -1,26 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const Project = require('../models/Project');
+const prisma = require('../config/prisma');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
-// Multer configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/projects/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+const { uploadToSupabase } = require('../utils/storageHelper');
 
+// Multer configuration for memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 // Get all projects
 router.get('/', async (req, res) => {
   try {
-    const projects = await Project.find().sort({ createdAt: -1 });
+    const projects = await prisma.project.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -30,7 +26,9 @@ router.get('/', async (req, res) => {
 // Get single project
 router.get('/:id', async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await prisma.project.findUnique({
+      where: { id: req.params.id }
+    });
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
@@ -43,14 +41,22 @@ router.get('/:id', async (req, res) => {
 // Create project
 router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
-    const projectData = {
-      ...req.body,
-      technologies: JSON.parse(req.body.technologies || '[]'),
-      image: req.file ? `/uploads/projects/${req.file.filename}` : ''
-    };
+    const technologies = JSON.parse(req.body.technologies || '[]');
+    const featured = req.body.featured === 'true' || req.body.featured === true;
+    const image = req.file ? await uploadToSupabase(req.file, 'projects') : '';
 
-    const project = new Project(projectData);
-    await project.save();
+    const project = await prisma.project.create({
+      data: {
+        title: req.body.title || '',
+        category: req.body.category || '',
+        description: req.body.description || '',
+        image,
+        technologies,
+        demoUrl: req.body.demoUrl || null,
+        githubUrl: req.body.githubUrl || null,
+        featured
+      }
+    });
 
     res.status(201).json({ message: 'Project created successfully', project });
   } catch (error) {
@@ -61,25 +67,32 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 // Update project
 router.put('/:id', auth, upload.single('image'), async (req, res) => {
   try {
-    const updateData = { ...req.body };
+    const updateData = {};
     
+    // Check fields to update
+    const stringFields = ['title', 'category', 'description', 'demoUrl', 'githubUrl'];
+    stringFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    });
+
     if (req.body.technologies) {
       updateData.technologies = JSON.parse(req.body.technologies);
     }
     
     if (req.file) {
-      updateData.image = `/uploads/projects/${req.file.filename}`;
+      updateData.image = await uploadToSupabase(req.file, 'projects');
     }
 
-    const project = await Project.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
-
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
+    if (req.body.featured !== undefined) {
+      updateData.featured = req.body.featured === 'true' || req.body.featured === true;
     }
+
+    const project = await prisma.project.update({
+      where: { id: req.params.id },
+      data: updateData
+    });
 
     res.json({ message: 'Project updated successfully', project });
   } catch (error) {
@@ -90,11 +103,9 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
 // Delete project
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const project = await Project.findByIdAndDelete(req.params.id);
-    
-    if (!project) {
-      return res.status(404).json({ message: 'Project not found' });
-    }
+    const project = await prisma.project.delete({
+      where: { id: req.params.id }
+    });
 
     res.json({ message: 'Project deleted successfully' });
   } catch (error) {
